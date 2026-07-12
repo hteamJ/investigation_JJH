@@ -213,9 +213,38 @@
   }
   .checkline { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 13px; }
   .section-divider { border-top: 1px solid var(--line); margin: 28px 0 20px; }
+<style>
+  #kakaoWarnBanner {
+    display: none;
+    background: #FEF3CD;
+    border-bottom: 2px solid #E8B93B;
+    padding: 12px 20px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #5C4A0A;
+  }
+  #kakaoWarnBanner button {
+    margin-top: 8px;
+    background: #1C2530;
+    color: #F6F4EF;
+    border: none;
+    border-radius: 3px;
+    padding: 8px 14px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
+
+<div id="kakaoWarnBanner">
+  ⚠ <strong>카카오톡 안에서 이 링크를 여신 것 같아요.</strong> 카카오톡 자체 브라우저에서는 파일 저장, 클립보드 복사 같은 일부 기능이 제대로 안 될 수 있어요.<br />
+  <span id="kakaoWarnAndroid">아래 버튼을 눌러 Chrome으로 열어보세요.</span>
+  <span id="kakaoWarnIOS" style="display:none;">화면 오른쪽 위 <strong>•••</strong> 메뉴를 눌러 "다른 브라우저로 열기" 또는 "Safari로 열기"를 선택해주세요.</span>
+  <br />
+  <button id="kakaoOpenChromeBtn" style="display:none;">Chrome으로 열기</button>
+</div>
 
 <header>
   <div class="eyebrow">PROTOTYPE · 범죄사실 및 수사결과보고서 프롬프트 생성기</div>
@@ -437,6 +466,38 @@
 </main>
 
 <script>
+// ===================== 카카오톡 인앱브라우저 감지 =====================
+(function () {
+  const ua = navigator.userAgent.toLowerCase();
+  const isKakao = ua.includes("kakaotalk");
+  if (!isKakao) return;
+
+  const banner = document.getElementById("kakaoWarnBanner");
+  banner.style.display = "block";
+
+  const isAndroid = ua.includes("android");
+  const isIOS = /iphone|ipad|ipod/.test(ua);
+
+  if (isAndroid) {
+    document.getElementById("kakaoWarnAndroid").style.display = "inline";
+    document.getElementById("kakaoWarnIOS").style.display = "none";
+    const btn = document.getElementById("kakaoOpenChromeBtn");
+    btn.style.display = "inline-block";
+    btn.onclick = () => {
+      const target = location.href.replace(/^https?:\/\//, "");
+      location.href = "intent://" + target + "#Intent;scheme=https;package=com.android.chrome;end";
+    };
+  } else if (isIOS) {
+    document.getElementById("kakaoWarnAndroid").style.display = "none";
+    document.getElementById("kakaoWarnIOS").style.display = "inline";
+    document.getElementById("kakaoOpenChromeBtn").style.display = "none";
+  } else {
+    document.getElementById("kakaoWarnAndroid").style.display = "none";
+    document.getElementById("kakaoWarnIOS").style.display = "inline";
+    document.getElementById("kakaoOpenChromeBtn").style.display = "none";
+  }
+})();
+
 // ===================== 데이터 =====================
 const CRIME_TYPES = [
   { id: "사기", label: "사기" },
@@ -720,122 +781,34 @@ function makePromptExport(label, promptFn) {
   return wrap;
 }
 
-// ===================== 파일 OCR (Tesseract.js, API 불필요, 브라우저에서 직접 처리) =====================
-async function ocrImageFile(file, onProgress) {
-  const result = await Tesseract.recognize(file, "kor+eng", {
-    logger: m => { if (m.status === "recognizing text" && onProgress) onProgress(m.progress); }
-  });
-  return result.data.text;
+// ===================== 이미지 텍스트 추출 안내 (자체 OCR 대신 Gemini/Claude로 유도) =====================
+// 자체 브라우저 OCR(Tesseract.js)은 화면 캡처 사진 등에서 정확도가 크게 떨어지는 것이 실사용 테스트로 확인되어 제거함.
+// 대신 사용자가 사진을 Gemini/Claude 채팅창에 직접 첨부하고, 아래 지시문을 붙여넣어 정확한 텍스트를 받도록 안내함.
+function buildImageExtractPrompt() {
+  return "첨부한 사진(또는 PDF)에 있는 텍스트를 그대로 옮겨 적어줘. 문답 형식이면 문/답 구조를 유지하고, 표가 있으면 표 내용도 빠짐없이 옮겨줘. 별도 설명이나 요약 붙이지 말고 원문 텍스트만 출력해줘.";
 }
 
-async function ocrPdfFile(file, onProgress) {
-  if (typeof pdfjsLib === "undefined") throw new Error("pdf.js 로드 실패");
-  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-  const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-  let fullText = "";
-  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-    const page = await pdf.getPage(pageNum);
-    const viewport = page.getViewport({ scale: 2.0 });
-    const canvas = document.createElement("canvas");
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-    const ctx = canvas.getContext("2d");
-    await page.render({ canvasContext: ctx, viewport }).promise;
-    const pageText = await ocrImageFile(canvas, onProgress);
-    fullText += (fullText ? "\n\n--- 다음 페이지 ---\n\n" : "") + pageText;
-  }
-  return fullText;
-}
-
-// 여러 장의 사진을 OCR로 이어붙일 때, 페이지 헤더 등이 반복되어 바로 이웃한 줄이
-// 완전히 똑같은 경우만 안전하게 하나로 정리 (내용이 조금이라도 다르면 절대 건드리지 않음)
-function removeAdjacentDuplicateLines(text) {
-  const lines = text.split("\n");
-  const out = [];
-  for (let i = 0; i < lines.length; i++) {
-    const cur = lines[i].trim();
-    const prev = out.length > 0 ? out[out.length - 1].trim() : null;
-    if (cur !== "" && cur === prev) continue;
-    out.push(lines[i]);
-  }
-  return out.join("\n");
-}
-
-function attachMultiFileOCRToElement(ta, mode) {
+function attachImageHelper(ta) {
   if (!ta) return;
   const wrap = document.createElement("div");
-  wrap.style.display = "flex";
-  wrap.style.alignItems = "center";
-  wrap.style.gap = "10px";
   wrap.style.marginTop = "6px";
-  wrap.style.marginBottom = "6px";
+  wrap.style.marginBottom = "10px";
 
-  const label = document.createElement("label");
-  label.className = "btn ghost";
-  label.style.cursor = "pointer";
-  label.style.fontSize = "12.5px";
-  label.style.padding = "6px 12px";
-  label.textContent = "사진/PDF 업로드 (여러 장 가능, 브라우저에서 무료 인식)";
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = ".png,.jpg,.jpeg,.pdf";
-  input.multiple = true;
-  input.style.display = "none";
-  label.appendChild(input);
+  const promptEl = makePromptExport("사진에서 텍스트 추출하기 (Gemini/Claude에게 직접)", buildImageExtractPrompt);
+  wrap.appendChild(promptEl);
 
-  const status = document.createElement("span");
-  status.style.fontSize = "12px";
-  status.style.color = "#7C7566";
+  const hint = document.createElement("div");
+  hint.className = "hint";
+  hint.style.marginTop = "4px";
+  hint.textContent = "위 문구를 복사한 뒤 Gemini나 Claude를 열어서, 그 채팅창에 사진을 직접 첨부하고 문구를 붙여넣으세요. 받은 텍스트 결과를 이 칸에 붙여넣으면 됩니다.";
+  wrap.appendChild(hint);
 
-  input.onchange = async () => {
-    const files = Array.from(input.files || []);
-    if (files.length === 0) return;
-    if (typeof Tesseract === "undefined") {
-      alert("OCR 라이브러리를 아직 불러오는 중이에요. 잠시 후 다시 시도해주세요 (인터넷 연결이 필요합니다).");
-      input.value = "";
-      return;
-    }
-    let combined = "";
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const ext = file.name.split(".").pop().toLowerCase();
-      status.textContent = "처리 중 (" + (i+1) + "/" + files.length + ") 0%";
-      try {
-        let text;
-        if (ext === "pdf") {
-          text = await ocrPdfFile(file, p => status.textContent = "처리 중 (" + (i+1) + "/" + files.length + ") " + Math.round(p*100) + "%");
-        } else {
-          text = await ocrImageFile(file, p => status.textContent = "처리 중 (" + (i+1) + "/" + files.length + ") " + Math.round(p*100) + "%");
-        }
-        combined += (combined ? "\n\n" : "") + "[파일: " + file.name + "]\n" + text.trim();
-      } catch (err) {
-        combined += (combined ? "\n\n" : "") + "[파일: " + file.name + " - 인식 실패]";
-      }
-    }
-    const cleaned = removeAdjacentDuplicateLines(combined);
-    ta.value = (mode === "append" && ta.value.trim()) ? ta.value.trim() + "\n\n" + cleaned : cleaned;
-    if (ta.oninput) ta.dispatchEvent(new Event("input"));
-    status.textContent = "완료 (" + files.length + "개 파일 처리됨, 인접 완전중복 줄만 자동 정리됨) - 페이지 경계와 인식 결과를 꼭 확인해주세요";
-    input.value = "";
-  };
-
-  wrap.appendChild(label);
-  wrap.appendChild(status);
   ta.insertAdjacentElement("afterend", wrap);
-
-  const heicHint = document.createElement("div");
-  heicHint.className = "hint";
-  heicHint.style.marginTop = "2px";
-  heicHint.style.marginBottom = "10px";
-  heicHint.textContent = "⚠ 아이폰은 기본 카메라 설정이 HEIC 형식이라 인식이 안 될 수 있어요. 설정 → 카메라 → 포맷 → \"높은 호환성\"으로 바꾼 뒤 촬영해주세요.";
-  wrap.insertAdjacentElement("afterend", heicHint);
-
   return wrap;
 }
 
-function attachMultiFileOCR(textareaId, mode) {
-  return attachMultiFileOCRToElement(document.getElementById(textareaId), mode);
+function attachImageHelperById(textareaId) {
+  return attachImageHelper(document.getElementById(textareaId));
 }
 
 // ===================== 죄종 pill (1번 탭) =====================
@@ -904,8 +877,8 @@ function refreshFactPrompt() {
   wrap.appendChild(factPromptExportEl);
 }
 refreshFactPrompt();
-attachMultiFileOCR("complaintText", "replace");
-attachMultiFileOCR("statementText", "append");
+attachImageHelperById("complaintText");
+attachImageHelperById("statementText");
 document.getElementById("factDownloadWrap").appendChild(
   makeDownloadButton("파일로 저장 (.docx)", () => document.getElementById("generatedFact").value, "범죄사실")
 );
@@ -1012,7 +985,7 @@ function renderRepeatableList(containerEl, list, opts) {
     row.appendChild(top);
     row.appendChild(ta);
     containerEl.appendChild(row);
-    attachMultiFileOCRToElement(ta, "replace");
+    attachImageHelper(ta);
   });
 }
 
@@ -1116,7 +1089,7 @@ function renderMiscItems() {
     row.appendChild(top);
     row.appendChild(ta);
     wrap.appendChild(row);
-    attachMultiFileOCRToElement(ta, "replace");
+    attachImageHelper(ta);
   });
 }
 
@@ -1154,7 +1127,7 @@ function renderPrecedents() {
     row.appendChild(top);
     row.appendChild(ta);
     wrap.appendChild(row);
-    attachMultiFileOCRToElement(ta, "replace");
+    attachImageHelper(ta);
   });
 }
 
@@ -1644,8 +1617,8 @@ function renderPrepCrimePills() {
   });
 }
 renderPrepCrimePills();
-attachMultiFileOCR("prepComplaintText", "replace");
-attachMultiFileOCR("prepStatementText", "append");
+attachImageHelperById("prepComplaintText");
+attachImageHelperById("prepStatementText");
 
 function buildInterrogationPrepPrompt() {
   const complaintText = maskPII(document.getElementById("prepComplaintText").value);
@@ -1691,8 +1664,6 @@ renderComplaintItems();
 renderVictimStatementItems();
 renderSuspectStatementItems();
 </script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </body>
 </html>
