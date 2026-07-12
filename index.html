@@ -265,6 +265,8 @@
   <button class="tab-btn active" data-tab="fact">① 범죄사실</button>
   <button class="tab-btn" data-tab="report">② 수사결과보고서</button>
   <button class="tab-btn" data-tab="prep">③ 피의자신문조서 준비</button>
+  <button class="tab-btn" data-tab="multisuspect">④ 다수 피의자 범죄사실</button>
+  <button class="tab-btn" data-tab="multicrime">⑤ 다수 범행 범죄사실</button>
 </div>
 
 <main>
@@ -462,6 +464,63 @@
       <textarea id="prepAnswer" rows="16" placeholder="다른 AI 채팅창에서 받은 피의자신문조서 준비사항 답변을 여기에 붙여넣으세요."></textarea>
     </div>
     <div id="prepDownloadWrap"></div>
+  </div>
+
+  <!-- ===================== TAB 4: 다수 피의자 범죄사실 ===================== -->
+  <div class="panel" id="panel-multisuspect">
+    <div class="hint" style="margin-top:0;">피의자가 여러 명인 사건용입니다. 이 탭도 완전히 독립적으로 작동해요. 이름을 등록해두면, 원자료(고소장·진술조서)와 대조해서 누가 누구와 공모했는지 AI가 더 정확히 판단할 수 있어요.</div>
+
+    <div class="label">피의자 이름 목록 (몇 명인지, 이름을 입력하세요)</div>
+    <div class="hint" style="margin-top:0;">실명을 그대로 쓰거나, 원자료에 A·B처럼 이니셜로 되어 있으면 그 표기 그대로 넣으세요. 원자료(아래 고소장·진술조서)에 등장하는 이름과 반드시 일치해야 AI가 정확히 대조할 수 있어요.</div>
+    <div id="multiSuspectNamesWrap" style="margin-bottom:10px;"></div>
+    <button class="btn ghost" id="btnAddMultiSuspectName" style="margin-bottom:22px;">피의자 추가</button>
+
+    <div class="label">죄종 선택 (해당하는 죄명을 전부 체크, 여러 개 가능)</div>
+    <div id="crime-checklist-multisuspect" style="margin-bottom:22px;"></div>
+
+    <div class="label">고소장 / 진정서 / 고발장 내용</div>
+    <div class="field-block">
+      <textarea id="multiSuspectComplaintText" rows="6" placeholder="여러 피의자와 관련된 고소장/진정서/고발장 원문을 붙여넣으세요."></textarea>
+    </div>
+
+    <div class="label">진술서 / 진술조서 내용</div>
+    <div class="field-block">
+      <textarea id="multiSuspectStatementText" rows="6" placeholder="고소인/참고인 진술 등, 여러 피의자의 역할이나 관계가 드러나는 내용을 포함해서 붙여넣으세요."></textarea>
+    </div>
+
+    <div id="promptMultiSuspectWrap" style="margin-bottom:24px;"></div>
+
+    <div class="label">AI 답변 붙여넣기</div>
+    <div class="field-block">
+      <textarea id="multiSuspectAnswer" rows="16" placeholder="다른 AI 채팅창에서 받은 범죄사실 결과를 여기에 붙여넣으세요."></textarea>
+    </div>
+    <div id="multiSuspectDownloadWrap"></div>
+  </div>
+
+  <!-- ===================== TAB 5: 다수 범행 범죄사실 ===================== -->
+  <div class="panel" id="panel-multicrime">
+    <div class="hint" style="margin-top:0;">피의자 한 명이 여러 범행(여러 죄명)을 저지른 사건용입니다. 이 탭도 완전히 독립적으로 작동해요.</div>
+
+    <div class="label">죄종 선택 (해당하는 죄명을 전부 체크, 여러 개 가능)</div>
+    <div id="crime-checklist-multicrime" style="margin-bottom:22px;"></div>
+
+    <div class="label">고소장 / 진정서 / 고발장 내용</div>
+    <div class="field-block">
+      <textarea id="multiCrimeComplaintText2" rows="6" placeholder="이 피의자와 관련된 여러 건의 고소장/진정서/고발장 원문을 붙여넣으세요."></textarea>
+    </div>
+
+    <div class="label">진술서 / 진술조서 내용</div>
+    <div class="field-block">
+      <textarea id="multiCrimeStatementText2" rows="6" placeholder="여러 범행에 걸친 진술 내용을 붙여넣으세요."></textarea>
+    </div>
+
+    <div id="promptMultiCrimeWrap" style="margin-bottom:24px;"></div>
+
+    <div class="label">AI 답변 붙여넣기</div>
+    <div class="field-block">
+      <textarea id="multiCrimeAnswer2" rows="16" placeholder="다른 AI 채팅창에서 받은 범죄사실 결과를 여기에 붙여넣으세요."></textarea>
+    </div>
+    <div id="multiCrimeDownloadWrap2"></div>
   </div>
 
 </main>
@@ -1668,6 +1727,130 @@ document.getElementById("prepDownloadWrap").appendChild(
     const body = document.getElementById("prepAnswer").value;
     return "피의자신문조서 준비 — " + prepCrimeType + "\n\n" + body;
   }, "피의자신문조서_준비")
+);
+
+// ===================== 탭4: 다수 피의자 범죄사실 (완전 독립) =====================
+let multiSuspectSelected = {};
+let multiSuspectNames = [{ id: "msn_" + Date.now(), name: "" }, { id: "msn_" + (Date.now()+1), name: "" }];
+
+function renderMultiSuspectNames() {
+  const wrap = document.getElementById("multiSuspectNamesWrap");
+  wrap.innerHTML = "";
+  multiSuspectNames.forEach((item, idx) => {
+    const row = document.createElement("div");
+    row.className = "row-inline";
+    const input = document.createElement("input");
+    input.type = "text";
+    input.placeholder = "피의자 " + (idx + 1) + " 이름 (예: 홍길동 또는 A)";
+    input.value = item.name;
+    input.oninput = () => item.name = input.value;
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn ghost";
+    delBtn.textContent = "삭제";
+    delBtn.onclick = () => {
+      if (multiSuspectNames.length <= 1) { alert("최소 1명은 있어야 해요."); return; }
+      multiSuspectNames = multiSuspectNames.filter(x => x.id !== item.id);
+      renderMultiSuspectNames();
+    };
+    row.appendChild(input);
+    row.appendChild(delBtn);
+    wrap.appendChild(row);
+  });
+}
+renderMultiSuspectNames();
+document.getElementById("btnAddMultiSuspectName").onclick = () => {
+  multiSuspectNames.push({ id: "msn_" + Date.now() + Math.random(), name: "" });
+  renderMultiSuspectNames();
+};
+
+function renderCrimeChecklist(containerId, selectedObj) {
+  const box = document.getElementById(containerId);
+  box.innerHTML = "";
+  CRIME_TYPES.forEach(c => {
+    const label = document.createElement("label");
+    label.className = "checkline";
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = !!selectedObj[c.id];
+    cb.onchange = () => { selectedObj[c.id] = cb.checked; };
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(c.label));
+    box.appendChild(label);
+  });
+}
+renderCrimeChecklist("crime-checklist-multisuspect", multiSuspectSelected);
+
+function buildMultiSuspectFactPrompt() {
+  const complaintText = document.getElementById("multiSuspectComplaintText").value;
+  const statementText = document.getElementById("multiSuspectStatementText").value;
+  const selectedCrimes = CRIME_TYPES.filter(c => multiSuspectSelected[c.id]);
+  if (selectedCrimes.length === 0) {
+    return "먼저 위에서 해당하는 죄명을 하나 이상 체크해주세요.";
+  }
+  const names = multiSuspectNames.map(n => n.name.trim()).filter(n => n);
+  if (names.length === 0) {
+    return "먼저 위에서 피의자 이름을 한 명 이상 입력해주세요.";
+  }
+  const guides = selectedCrimes.map(c => "- " + c.label + ": " + PATTERN_GUIDE[c.id]).join("\n");
+  const rulesText = selectedCrimes.map(c => crimeSpecificRules(c.id)).join("\n");
+  const labels = "가나다라마바사아자차";
+  return "너는 대한민국 경찰 수사서류 작성을 돕는 어시스턴트야. 아래 사건에는 피의자가 총 " + names.length + "명(" + names.join(", ") + ") 등장해. 선택된 죄명에 해당하는 내용을 찾아서, 죄명별로 '" + labels[0] + ".', '" + labels[1] + ".'... 항목으로 나눠 각각 완결된 범죄사실을 공문서체(\"~하였다\")로 작성해줘.\n\n" +
+"[피의자 목록 - 아래 이름 그대로 사용하고, 원자료에서 이 이름들이 각각 어떤 역할을 했는지 빠짐없이 찾아서 반영할 것]\n" + names.map((n,i) => (i+1) + ". " + n).join("\n") + "\n\n" +
+"[작성 규칙]\n" +
+"- 각 항목은 하나의 죄명에 대한 완결된 범죄사실이어야 함\n" +
+"- 위 피의자 목록 중 같은 죄명을 여러 명이 함께 저지른 것으로 원자료에서 확인되면(공모관계), 그 항목은 하나로 통합해서 '피의자 " + (names[0] || "OOO") + ", " + (names[1] || "ㅁㅁㅁ") + "는 공모하여 ~하였다' 형태로 시작하고, 이어서 각자의 구체적 역할을 이름을 명시해서 서술할 것\n" +
+"- 서로 관련 없이 각자 독자적으로 저지른 범행이면, 그 항목 안에서도 이름별로 문단을 나눠 분리해서 작성할 것\n" +
+"- 공모관계인지 단독범행인지는 반드시 원자료의 내용에 근거해서 판단할 것. 근거 없이 임의로 공모관계를 만들어내지 말 것 — 판단이 애매하면 '[공모관계 확인 필요]'라고 표시할 것\n" +
+"- 위 목록에 있는 피의자 중 원자료에서 전혀 언급을 찾을 수 없는 사람이 있다면, 본문 뒤에 '[원자료에서 확인 안 됨: 이름]'이라고 표시할 것\n" +
+"- 각 피의자는 위 목록의 이름을 그대로 사용해서 구분 표기, 피해자는 '피해자'로 통일\n" +
+"- 피해금액·이득액은 고소인이 진술한 금액을 그대로 사용하고(추정치라도 빈칸 처리하지 말 것), 원자료에 전혀 없는 경우만 [ ]로 비워둘 것\n" +
+"- 판례·법조문은 인용하지 말 것\n" +
+rulesText + "\n\n" +
+"[선택된 죄명별 문형 지침]\n" + guides + "\n\n" +
+"[고소장/진정서/고발장 내용]\n" + (complaintText || "(입력 없음)") + "\n\n" +
+"[진술서/진술조서 내용]\n" + (statementText || "(입력 없음)") + "\n\n" +
+"위 자료로 각 죄명별 범죄사실을 순서대로 작성해줘.";
+}
+
+const promptMultiSuspectWrap = document.getElementById("promptMultiSuspectWrap");
+promptMultiSuspectWrap.appendChild(makePromptExport("AI에게 다수 피의자 범죄사실 물어보기", buildMultiSuspectFactPrompt));
+
+document.getElementById("multiSuspectDownloadWrap").appendChild(
+  makeDownloadButton("파일로 저장 (.docx)", () => document.getElementById("multiSuspectAnswer").value, "다수피의자_범죄사실")
+);
+
+// ===================== 탭5: 다수 범행 범죄사실 (완전 독립) =====================
+let multiCrimeSelected2 = {};
+renderCrimeChecklist("crime-checklist-multicrime", multiCrimeSelected2);
+
+function buildMultiCrimeFactPrompt2() {
+  const complaintText = document.getElementById("multiCrimeComplaintText2").value;
+  const statementText = document.getElementById("multiCrimeStatementText2").value;
+  const selectedCrimes = CRIME_TYPES.filter(c => multiCrimeSelected2[c.id]);
+  if (selectedCrimes.length === 0) {
+    return "먼저 위에서 해당하는 죄명을 하나 이상 체크해주세요.";
+  }
+  const guides = selectedCrimes.map(c => "- " + c.label + ": " + PATTERN_GUIDE[c.id]).join("\n");
+  const rulesText = selectedCrimes.map(c => crimeSpecificRules(c.id)).join("\n");
+  const labels = "가나다라마바사아자차";
+  return "너는 대한민국 경찰 수사서류 작성을 돕는 어시스턴트야. 아래 자료는 피의자 한 명이 여러 범행(여러 죄명)을 저지른 사건이야. 선택된 죄명에 해당하는 내용을 찾아서, 죄명별로 '" + labels[0] + ".', '" + labels[1] + ".'... 항목으로 나눠 각각 완결된 범죄사실을 공문서체(\"~하였다\")로 작성해줘.\n\n" +
+"[작성 규칙]\n" +
+"- 각 항목은 하나의 죄명에 대한 완결된 범죄사실이어야 하고, 전부 같은 피의자 한 명을 기준으로 작성할 것\n" +
+"- 실명 대신 '피의자', '피해자' 호칭 사용 (피해자가 여러 명이면 '피해자 1', '피해자 2' 등으로 구분)\n" +
+"- 피해금액·이득액은 고소인이 진술한 금액을 그대로 사용하고(추정치라도 빈칸 처리하지 말 것), 원자료에 전혀 없는 경우만 [ ]로 비워둘 것\n" +
+"- 판례·법조문은 인용하지 말 것\n" +
+rulesText + "\n\n" +
+"[선택된 죄명별 문형 지침]\n" + guides + "\n\n" +
+"[고소장/진정서/고발장 내용]\n" + (complaintText || "(입력 없음)") + "\n\n" +
+"[진술서/진술조서 내용]\n" + (statementText || "(입력 없음)") + "\n\n" +
+"위 자료로 각 죄명별 범죄사실을 순서대로 작성해줘.";
+}
+
+const promptMultiCrimeWrap = document.getElementById("promptMultiCrimeWrap");
+promptMultiCrimeWrap.appendChild(makePromptExport("AI에게 다수 범행 범죄사실 물어보기", buildMultiCrimeFactPrompt2));
+
+document.getElementById("multiCrimeDownloadWrap2").appendChild(
+  makeDownloadButton("파일로 저장 (.docx)", () => document.getElementById("multiCrimeAnswer2").value, "다수범행_범죄사실")
 );
 
 // ===================== 초기 렌더 =====================
