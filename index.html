@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>수사서류 작성 지원 도구 - 프로토타입</title>
+<style>
+  :root {
+    --ink: #1C2530;
+    --paper: #F6F4EF;
+    --line: #D9D4C7;
+    --seal: #7A2E2E;
+    --muted: #7C7566;
+    --accent: #35506B;
+    --field: #FBFAF7;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  }
+  header {
+    border-bottom: 2px solid var(--ink);
+    padding: 28px 32px 20px;
+  }
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--seal);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  h1 {
+    font-size: 26px;
+    font-weight: 800;
+    font-family: Georgia, serif;
+    margin: 0;
+  }
+  .sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--line);
+    padding: 0 32px;
+  }
+  .tab-btn {
+    padding: 14px 20px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 14.5px;
+    cursor: pointer;
+    margin-bottom: -1px;
+    font-family: inherit;
+  }
+  .tab-btn.active {
+    border-bottom: 2px solid var(--ink);
+    color: var(--ink);
+    font-weight: 700;
+  }
+  main {
+    padding: 28px 32px 60px;
+    max-width: 980px;
+  }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .label {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  textarea, input[type=text] {
+    width: 100%;
+    background: var(--field);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 12px 14px;
+    font-size: 14.5px;
+    line-height: 1.7;
+    color: var(--ink);
+    font-family: Georgia, serif;
+    resize: vertical;
+    outline: none;
+  }
+  select {
+    padding: 9px 12px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-size: 13.5px;
+    background: var(--field);
+    font-family: inherit;
+  }
+  textarea:focus, input[type=text]:focus { border-color: var(--accent); }
+  .pill {
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    background: var(--field);
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    margin: 0 6px 6px 0;
+  }
+  .pill.active { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+  .btn {
+    background: var(--ink);
+    color: var(--paper);
+    border: 1px solid var(--ink);
+    border-radius: 3px;
+    padding: 9px 18px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn.ghost { background: transparent; color: var(--ink); }
+  .btn.seal { background: var(--seal); border-color: var(--seal); }
+  .btn.dashed {
+    background: transparent;
+    border: 1px dashed var(--muted);
+    color: var(--muted);
+    border-radius: 3px;
+    padding: 7px 14px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .field-block { margin-bottom: 18px; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 8px; margin-bottom: 10px; }
+  .warn-box {
+    background:#FCEBEB; border:1px solid #E24B4A; border-radius:4px; padding:12px 14px;
+    margin-bottom: 14px; font-size:12.5px; line-height:1.7; color:#501313;
+  }
+  .warn-box a { color:#501313; }
+  .prompt-box {
+    background: #FFFDF8;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 14px;
+    font-size: 12.5px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    max-height: 260px;
+    overflow-y: auto;
+    font-family: Georgia, serif;
+    color: #3A3428;
+    margin-top: 10px;
+  }
+  .prompt-actions { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .copy-status { font-size: 12px; color: var(--seal); }
+  .mode-row { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+  .mode-btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    background: var(--field);
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .mode-btn.active { border-color: var(--accent); background: var(--accent); color: var(--paper); }
+  .card {
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 16px;
+    margin-bottom: 16px;
+    background: #fff;
+  }
+  .card-title-input {
+    width: 100%;
+    font-weight: 700;
+    font-size: 14.5px;
+    border: none;
+    border-bottom: 1px solid var(--line);
+    padding: 4px 0 8px;
+    margin-bottom: 12px;
+    outline: none;
+    background: transparent;
+    font-family: inherit;
+  }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px; }
+  .row-inline { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .row-inline input[type=text] { flex: 1; padding: 8px 10px; }
+  pre.result {
+    background: var(--field);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 18px;
+    font-size: 13.5px;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    font-family: Georgia, serif;
+    margin: 0;
+  }
+  .pii-box {
+    background: #FBFAF7;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+  }
+  .checkline { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 13px; }
+  .section-divider { border-top: 1px solid var(--line); margin: 28px 0 20px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">PROTOTYPE · 범죄사실 및 수사결과보고서 프롬프트 생성기</div>
+  <h1>수사서류 작성 지원 도구</h1>
+  <div class="sub">이 도구는 API를 호출하지 않습니다. 자료를 넣고 프롬프트를 복사해서, 원하는 AI(Gemini, ChatGPT, Claude.ai 등)에 붙여넣어 결과를 받는 방식입니다.</div>
+  <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+    <a href="https://claude.ai/new" target="_blank" rel="noopener noreferrer" class="btn ghost" style="text-decoration:none; display:inline-block;">Claude에게 물어보러 가기 ↗</a>
+    <a href="https://gemini.google.com/app" target="_blank" rel="noopener noreferrer" class="btn ghost" style="text-decoration:none; display:inline-block;">Gemini에게 물어보러 가기 ↗</a>
+    <button class="btn ghost" id="btnSaveCase">사건 저장 (파일로 저장)</button>
+    <label class="btn ghost" style="cursor:pointer; margin:0;">사건 불러오기
+      <input type="file" id="loadCaseInput" accept=".json" style="display:none;" />
+    </label>
+  </div>
+  <div class="hint" style="margin-top:8px; margin-bottom:0;">먼저 "프롬프트 복사" 버튼으로 복사한 다음, 이 버튼을 눌러 새 탭에서 붙여넣기(Ctrl+V) 하시면 됩니다. 작업 중인 사건은 "사건 저장"으로 내려받아두면 나중에 "사건 불러오기"로 이어서 작업할 수 있어요.</div>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="fact">① 범죄사실</button>
+  <button class="tab-btn" data-tab="report">② 수사결과보고서</button>
+  <button class="tab-btn" data-tab="prep">③ 피의자신문조서 준비</button>
+</div>
+
+<main>
+
+  <!-- ===================== TAB 1: 범죄사실 ===================== -->
+  <div class="panel active" id="panel-fact">
+    <div class="label">죄종 선택</div>
+    <div id="crime-pills" style="margin-bottom:22px;"></div>
+
+    <div class="label">고소장 / 진정서 / 고발장 내용</div>
+    <div class="field-block">
+      <textarea id="complaintText" rows="6" placeholder="예: 피해자는 2024. 3.경 인터넷에서 원단 판매 광고를 보고 피의자에게 연락하여..."></textarea>
+    </div>
+
+    <div class="label">진술서 / 진술조서 내용</div>
+    <div class="field-block">
+      <textarea id="statementText" rows="6" placeholder="예: 문: 피해를 입은 경위를 진술하세요. 답: ..."></textarea>
+    </div>
+
+    <div id="promptFactWrap" style="display:inline-block;"></div>
+
+    <div style="margin-top:26px;">
+      <div class="label">AI가 써준 범죄사실 붙여넣기 (결과를 여기 저장해두면 2번 탭에서 참고자료로 씁니다)</div>
+      <textarea id="generatedFact" rows="10" placeholder="다른 AI 채팅창에서 받은 범죄사실 결과를 여기에 붙여넣으세요."></textarea>
+      <div id="factDownloadWrap"></div>
+    </div>
+  </div>
+
+  <!-- ===================== TAB 2: 수사결과보고서 ===================== -->
+  <div class="panel" id="panel-report">
+
+    <div class="label">범죄사실</div>
+    <div class="hint" style="margin-top:0;">1번 탭에서 작성한 범죄사실이 있으면 자동으로 채워집니다. 여기서 직접 수정하거나 새로 붙여넣어도 됩니다.</div>
+    <div class="field-block">
+      <textarea id="reportFact" rows="8" placeholder="이 사건의 범죄사실을 붙여넣으세요. (1번 탭에서 작성했다면 자동으로 채워집니다)"></textarea>
+    </div>
+
+    <div class="label">피의자 목록 (여러 명일 수 있어요, 이름과 각자의 죄명을 지정하세요)</div>
+    <div class="hint" style="margin-top:0;">이름을 모르면 비워두세요(성명불상으로 처리). 피의자가 여러 명이고 죄명이 서로 다르면 각자 지정해주세요.</div>
+    <div id="suspectsWrap" style="margin-bottom:10px;"></div>
+    <button class="btn ghost" id="btnAddSuspect" style="margin-bottom:22px;">피의자 추가</button>
+
+    <div class="pii-box">
+      <div class="label" style="margin-bottom:10px;">개인정보 마스킹 (프롬프트를 복사할 때만 적용됩니다 — 화면에 입력된 원본은 그대로 유지)</div>
+      <label class="checkline">
+        <input type="checkbox" id="piiAutoMask" checked />
+        주민번호·전화번호·계좌번호·이메일 자동 마스킹
+      </label>
+      <div class="label" style="margin-top:10px;">실명 → 대체어 치환 목록</div>
+      <div id="nameMapWrap" style="margin-bottom:8px;"></div>
+      <button class="btn ghost" id="btnAddNamePair">이름 추가</button>
+    </div>
+
+    <div class="label">원자료 입력 (이 사건에서 확보된 서류를 각각 붙여넣으세요, 여러 차례 받았다면 각각 추가하세요)</div>
+    <div class="hint" style="margin-top:0;">
+      비어있는 항목은 프롬프트에서 "자료 없음"으로 표시됩니다. 이미지/PDF는 아래 업로드 버튼으로 브라우저에서 바로 텍스트로 변환됩니다(무료, API 불필요).
+    </div>
+
+    <div class="label" style="margin-top:14px;">고소장 / 진정서 / 고발장 원문</div>
+    <div id="complaintItemsWrap" style="margin-bottom:10px;"></div>
+    <button class="btn ghost" id="btnAddComplaintItem" style="margin-bottom:20px;">+ 자료 추가 (2차, 3차...)</button>
+
+    <div class="label">고소인 / 참고인 진술조서 원문</div>
+    <div id="victimStatementItemsWrap" style="margin-bottom:10px;"></div>
+    <button class="btn ghost" id="btnAddVictimStatementItem" style="margin-bottom:20px;">+ 자료 추가 (2차, 3차...)</button>
+
+    <div class="label">피의자신문조서 원문</div>
+    <div class="hint" style="margin-top:0;">피의자별로, 그리고 같은 피의자라도 여러 회차로 나뉘면 각각 추가하세요.</div>
+    <div id="suspectStatementItemsWrap" style="margin-bottom:10px;"></div>
+    <button class="btn ghost" id="btnAddSuspectStatementItem" style="margin-bottom:20px;">+ 자료 추가 (1회, 2회...)</button>
+
+    <div class="label">기타 수사보고서 / 압수물·증거자료 분석 (여러 개 추가 가능)</div>
+    <div class="hint" style="margin-top:0;">디지털포렌식 결과, 계좌추적 결과, CCTV분석 등 자료별로 하나씩 추가하세요.</div>
+    <div id="miscItemsWrap" style="margin-bottom:10px;"></div>
+    <button class="btn ghost" id="btnAddMiscItem" style="margin-bottom:20px;">자료 추가</button>
+
+    <div class="section-divider"></div>
+
+    <div class="label">사건 유형</div>
+    <div class="mode-row">
+      <button class="mode-btn active" data-mode="dispute">쟁점형 (진술이 엇갈리는 사건)</button>
+      <button class="mode-btn" data-mode="confession">자백형 (피의자가 혐의 인정)</button>
+      <button class="mode-btn" data-mode="unspecified">불특정형 (피의자 미특정·성명불상 등)</button>
+    </div>
+
+    <div class="label">추가 항목 (사건마다 다르게 필요한 항목을 직접 추가하세요 — 나.다.라. 등으로 이어집니다)</div>
+    <div class="hint" style="margin-top:0;">불특정형 사건처럼 "나. 쟁점" 구조 자체가 필요 없는 경우, 여기서 "나. 고소인 주장"처럼 직접 항목을 만들어 쓰세요. 내용을 비워두면, "수사결과보고서 작성" 시 AI가 원자료를 직접 확인해서 있는 내용은 자동으로 채워 넣고, 원자료에도 정말 없을 때만 "작성불가(이유: 정보부족)"로 표시합니다.</div>
+    <div id="extraItems" style="margin-bottom:10px;"></div>
+    <button class="btn ghost" id="btnAddExtraItem" style="margin-bottom:22px;">항목 추가</button>
+
+    <div id="confessionBlock" style="display:none;">
+      <div class="label">가. 피의자의 자백</div>
+      <div class="hint" style="margin-top:0;">비워두어도 괜찮습니다. 아래 "AI에게 전체 보고서 물어보기"를 쓰면, AI가 위 피의자신문조서 원문을 확인해서 자백 내용을 정리해줍니다.</div>
+      <div class="field-block"><textarea id="confession" rows="4" placeholder="피의자가 인정한 내용 요약... (비워두면 AI가 피의자신문조서에서 찾아 채웁니다)"></textarea></div>
+      <div class="label">나. 자백에 대한 보강증거</div>
+      <div class="field-block"><textarea id="confessionEvidence" rows="3" placeholder="고소장(제00쪽), 계좌거래내역(제00쪽) 등... (비워두면 AI가 원자료에서 찾아 채웁니다)"></textarea></div>
+    </div>
+
+    <div id="factsSection">
+      <div class="label">가. 다툼이 없이 인정되는 사실</div>
+      <div class="hint" style="margin-top:0;">⚠ 이 항목은 사건의 사실관계 토대가 되는 만큼, AI 초안을 그대로 쓰기보다 <strong>직접 작성하거나, 초안을 받더라도 원자료와 한 줄씩 대조 검증하는 것을 권장</strong>합니다.</div>
+      <div id="promptFactsAgreedWrap" style="margin-bottom:12px;"></div>
+      <div class="field-block">
+        <textarea id="factsAgreed" rows="5" placeholder="① 피의자 명의 계좌로 400만 원 입금된 사실 확인됨 (계좌 거래내역서 제3쪽) ..."></textarea>
+      </div>
+    </div>
+
+    <div id="disputesSection">
+      <div class="label">나. 쟁점</div>
+      <div class="hint" style="margin-top:0;">아래 프롬프트로 AI에게 쟁점을 물어본 뒤, 답변 전체를 아래 칸에 붙여넣고 "자동으로 쟁점 카드 나누기"를 누르면 AI가 만든 형식(나./다./1)2)3)4))에 맞춰 카드가 자동으로 만들어져요. 형식이 안 맞으면 "쟁점 추가"로 직접 만드세요.</div>
+      <div id="promptDisputeWrap" style="margin-bottom:10px;"></div>
+      <div class="field-block">
+        <textarea id="disputeRawAnswer" rows="8" placeholder="AI가 준 쟁점 답변 전체를 여기에 통째로 붙여넣으세요 (나. 쟁점제목 / 1) 고소인의 주장 / 2) 피의자의 주장 / 3) 관련 판례 / 4) 검토 형식)"></textarea>
+      </div>
+      <div style="margin-bottom:20px; display:flex; gap:8px;">
+        <button class="btn" id="btnParseDisputes">자동으로 쟁점 카드 나누기</button>
+        <button class="btn ghost" id="btnAddDispute">쟁점 직접 추가</button>
+      </div>
+
+      <div id="disputeCards"></div>
+    </div>
+
+    <div id="precedentSection">
+      <div class="label">판례 추가 (쟁점을 먼저 정한 뒤, 각 쟁점에 맞는 판례를 찾아 여기 등록하세요)</div>
+      <div class="hint" style="margin-top:0;">슈퍼로이어 등에서 찾은 판례를 판례번호+내용 형태로 붙여넣으세요. 등록 후 위 쟁점 카드의 "3) 관련 판례" 칸에 옮겨 적거나, 아래 "판례 관련성 확인"으로 대조해보세요.</div>
+      <div class="warn-box">
+        ⚠ <strong>AI가 제시하는 판례번호는 실제로 존재하는 다른 사건 번호를 갖다 붙이거나, 번호 자체를 지어내는 경우가 있어요.</strong> AI 답변에 나온 판례는 그대로 쓰지 마시고, 반드시 <a href="https://casenote.kr" target="_blank" rel="noopener noreferrer">casenote.kr</a>, <a href="https://www.law.go.kr" target="_blank" rel="noopener noreferrer">국가법령정보센터</a>, 종합법률정보 등에서 판례번호와 실제 판시내용이 일치하는지 직접 검색해서 확인한 뒤 판례 자료함에 등록해주세요.
+      </div>
+      <div id="precedentItemsWrap" style="margin-bottom:10px;"></div>
+      <button class="btn ghost" id="btnAddPrecedentItem" style="margin-bottom:14px;">판례 추가</button>
+      <div id="promptPrecedentRelevanceWrap" style="margin-bottom:20px;"></div>
+    </div>
+
+    <div class="label">결정</div>
+    <select id="decision">
+      <option>송치(구속)</option>
+      <option selected>송치(불구속)</option>
+      <option>불송치(혐의없음-증거불충분)</option>
+      <option>불송치(죄가안됨)</option>
+      <option>불송치(공소권없음)</option>
+      <option>각하</option>
+    </select>
+
+    <div style="margin-top:14px;">
+      <button class="btn seal" id="btnAssemble">화면 내용으로 보고서 조합</button>
+      <div id="promptFullWrap" style="display:inline-block;"></div>
+    </div>
+
+    <div id="assembledWrap" style="margin-top:24px; display:none;">
+      <div class="label">최종 수사결과보고서 (화면에 입력된 내용 기준)</div>
+      <pre class="result" id="assembledText"></pre>
+      <div id="assembledDownloadWrap"></div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <div class="label">AI가 작성한 전체 보고서 붙여넣기</div>
+    <div class="hint" style="margin-top:0;">위 "AI에게 전체 보고서 물어보기"로 받은 답변 전체를 그대로 여기에 붙여넣으세요. 아래 버튼을 누르면 범죄사실과 합쳐서 최종본으로 만들어줍니다.</div>
+    <div class="field-block">
+      <textarea id="aiFullReportAnswer" rows="12" placeholder="다른 AI 채팅창에서 받은 '6. 수사결과 및 의견' 전체 답변을 여기에 붙여넣으세요."></textarea>
+    </div>
+    <button class="btn seal" id="btnFinalizeFromAI">수사결과보고서 작성</button>
+    <div id="finalReportWrap" style="margin-top:24px; display:none;">
+      <div class="label">최종 수사결과보고서 (AI 답변 기준)</div>
+      <pre class="result" id="finalReportText"></pre>
+      <div id="finalReportDownloadWrap"></div>
+    </div>
+
+
+  </div>
+
+  <!-- ===================== TAB 3: 피의자신문조서 준비 ===================== -->
+  <div class="panel" id="panel-prep">
+    <div class="hint" style="margin-top:0;">이 탭은 2번 탭과 별개로 독립적으로 작동합니다. 죄명, 고소장, 진술조서만 넣으면 됩니다 (이름 불필요).</div>
+
+    <div class="label">죄종 선택</div>
+    <div id="crime-pills-prep" style="margin-bottom:22px;"></div>
+
+    <div class="label">고소장 / 진정서 / 고발장 원문</div>
+    <div class="field-block">
+      <textarea id="prepComplaintText" rows="6" placeholder="이 사건의 고소장/진정서/고발장 원문을 붙여넣으세요."></textarea>
+    </div>
+
+    <div class="label">진술서 / 진술조서 원문</div>
+    <div class="field-block">
+      <textarea id="prepStatementText" rows="6" placeholder="고소인/참고인 진술서 또는 진술조서 원문을 붙여넣으세요."></textarea>
+    </div>
+
+    <div id="promptPrepWrap" style="margin-bottom:24px;"></div>
+
+    <div class="label">AI 답변 붙여넣기</div>
+    <div class="hint" style="margin-top:0;">위 프롬프트로 받은 답변(필수질문/받아야할 자료/조사 전 알아야 할 정보)을 여기에 붙여넣어 저장해두세요.</div>
+    <div class="field-block">
+      <textarea id="prepAnswer" rows="16" placeholder="다른 AI 채팅창에서 받은 피의자신문조서 준비사항 답변을 여기에 붙여넣으세요."></textarea>
+    </div>
+    <div id="prepDownloadWrap"></div>
+  </div>
+
+</main>
+
+<script>
+// ===================== 데이터 =====================
+const CRIME_TYPES = [
+  { id: "사기", label: "사기" },
+  { id: "횡령", label: "횡령" },
+  { id: "업무상횡령", label: "업무상횡령" },
+  { id: "배임", label: "배임" },
+  { id: "업무상배임", label: "업무상배임" },
+  { id: "사이버사기", label: "사이버사기" },
+  { id: "모욕", label: "모욕" },
+  { id: "명예훼손(사실적시)", label: "명예훼손(사실적시)" },
+  { id: "명예훼손(허위사실적시)", label: "명예훼손(허위사실적시)" },
+  { id: "정통망법명예훼손", label: "정통망법 명예훼손" },
+];
+
+const PATTERN_GUIDE = {
+  "사기": "구조: [피의자/관계 서두] → [기망행위: 허위 게시글·거짓말 내용] → [착오: 이를 믿은 피해자] → [처분행위: 송금/교부 일시·금액] → [결어: 이로써 피의자는 피해자를 기망하여 이에 속은 피해자로부터 재물을 교부받아 이를 편취하였다]. 처음부터 이행의사·능력이 없었다는 취지의 문구가 핵심 요건으로 자주 명시됨.",
+  "횡령": "구조: [보관 원인: 위탁/착오송금/동업재산 등] → [보관 중이라는 사실] → [임의소비·처분 행위, 일시·금액] → [결어: 이로써 피의자는 피해자를 위하여 보관하던 재물을 횡령하였다].",
+  "업무상횡령": "구조: [지위·기간·업무 서두: 피의자는 언제부터 언제까지 ○○에서 △△ 업무에 종사하던 사람으로서] → [업무상 보관 원인] → [임의소비·처분 행위, 방법·일시·금액, 반복행위면 총 회수·합계액] → [결어: 이로써 피의자는 업무상 보관하던 피해자(회사) 소유의 재물을 횡령하였다]. 일반 횡령과 달리 '업무상 보관자'라는 지위(직책·근무기간·담당업무)를 서두에 반드시 구체적으로 명시해야 하며, 이게 빠지면 단순 횡령과 구분되지 않음.",
+  "배임": "구조: [임무 발생 원인: 계약체결 등] → [임무 내용] → [임무위배 행위] → [결어: 재산상 이익을 취득하고 피해자에게 동액 상당의 손해를 가하였다].",
+  "업무상배임": "구조: [지위·기간·업무 서두: 피의자는 언제부터 언제까지 ○○에서 △△ 업무를 담당하며 ~할 업무상 임무가 있었다] → [임무위배 행위] → [결어: 재산상 이익을 취득하게 하고 피해자에게 동액 상당의 손해를 가하였다]. 일반 배임과 달리 '업무상' 지위(직책·근무기간·담당업무)를 서두에 반드시 구체적으로 명시해야 하며, 이게 빠지면 단순 배임과 구분되지 않음. 은행·신협 등 금융기관 직원의 대출·담보 업무 관련 배임, 회사 직원의 영업비밀 유출·리베이트 수수 등은 통상 업무상배임으로 분류됨.",
+  "사이버사기": "사기와 동일 구조이나 간명화: [피의자는 성명불상자이다] → [플랫폼명+허위 게시글] → [연락수단+거짓말+타인명의 계좌] → [송금 일시·금액] → [처음부터 이행 의사·능력 없었음] → [미이행+연락두절] → [결어: 기망하여 재물을 교부받아 편취].",
+  "모욕": "구조: [일시·장소·현장 인원] → [피해자를 향한 구체적 발언, 경멸적 표현] → [결어: 공연히 피해자를 모욕하였다].",
+  "명예훼손(사실적시)": "구조: [관계/지위 서두] → [일시·장소·인원] → [적시한 구체적 사실] → [결어: 공연히 사실을 적시하여 명예를 훼손하였다].",
+  "명예훼손(허위사실적시)": "구조: 사실적시와 동일하나 [이는 사실과 다른 것이었다]는 문구 필수 → [결어: 공연히 허위의 사실을 적시하여 명예를 훼손하였다].",
+  "정통망법명예훼손": "구조: [매체+열람 가능 인원] → [게시 내용] → [사실/허위 여부] → [결어: 비방할 목적으로 정보통신망을 통하여 공공연하게 (허위의) 사실을 드러내어 명예를 훼손하였다].",
+};
+
+const DECISIONS_LIST = ["송치(구속)","송치(불구속)","불송치(혐의없음-증거불충분)","불송치(죄가안됨)","불송치(공소권없음)","각하"];
+
+function crimeSpecificRules(crimeType) {
+  const rules = [];
+  rules.push("자료에서 피의자의 실명이 확인되지 않거나 '성명불상' 표시가 있는 경우: 첫 문장을 \"피의자는 성명불상자이다.\"로 시작하고, 본문에 피의자를 특정할 수 있는 수단(계좌번호, 카카오톡/커뮤니티 ID, 전화번호 등 자료에 있는 것)을 반드시 명시할 것. 자료에 피의자 실명이 명확히 확인되는 경우에는 이 규칙을 적용하지 말 것");
+  if (crimeType === "사이버사기") {
+    rules.push("이 죄종은 통상 피의자가 특정되지 않은 사건이 많으므로, 실명이 없다면 위 성명불상자 규칙을 반드시 적용할 것");
+  }
+  if (crimeType === "정통망법명예훼손") {
+    rules.push("정보통신망법위반(명예훼손)은 형법상 명예훼손과 다른 별개 죄이므로, 반드시 '비방할 목적'이라는 주관적 요건과 '정보통신망을 통하여'라는 행위수단을 본문에 명시할 것. 결어는 반드시 \"비방할 목적으로 정보통신망을 통하여 공공연하게 (허위의) 사실을 드러내어 피해자의 명예를 훼손하였다\" 형태로 마무리하고, 형법 제307조식 결어(\"공연히 (허위의) 사실을 적시하여\")를 쓰지 말 것");
+  }
+  if (crimeType === "업무상횡령" || crimeType === "업무상배임") {
+    rules.push("일반 횡령·배임과 구분되는 핵심 요건이므로, 첫 문장에 피의자의 지위·근무기간·담당업무(예: \"피의자는 2019년경부터 2024년 초경까지 ○○에서 △△ 업무를 담당하던 사람으로서\")를 반드시 구체적으로 명시할 것. 이 서두가 빠지면 단순 횡령·배임과 구분되지 않으므로 절대 생략하지 말 것");
+  }
+  rules.push("자료에 차단, 계정/게시글 삭제, 연락두절, 잠적 등 증거인멸·회피 정황이 있으면 그 구체적 행위를 빠짐없이 서술할 것");
+  return rules.map(r => "- " + r).join("\n");
+}
+
+// ===================== 상태 =====================
+const defaultSuspectId = "sp_" + Date.now();
+let state = {
+  crimeType: "사기",
+  caseMode: "dispute", // dispute | confession | unspecified
+  disputes: [],
+  extraItems: [],
+  miscItems: [],
+  precedents: [],
+  nameMap: [],
+  suspects: [{ id: defaultSuspectId, name: "", crimeType: "사기" }],
+  complaintItems: [{ id: "c_" + Date.now(), label: "1차", content: "" }],
+  victimStatementItems: [{ id: "v_" + Date.now(), label: "1차", content: "" }],
+  suspectStatementItems: [{ id: "s_" + Date.now(), suspectId: defaultSuspectId, label: "1회", content: "" }],
+};
+
+// ===================== 개인정보 마스킹 =====================
+function maskPII(text) {
+  if (!text) return text;
+  let out = text;
+  if (document.getElementById("piiAutoMask").checked) {
+    out = out.replace(/\d{6}\s?-\s?\d{7}/g, "######-#######");
+    out = out.replace(/01[0-9]\s?-?\s?\d{3,4}\s?-?\s?\d{4}/g, "010-****-****");
+    out = out.replace(/\d{2,6}-\d{2,6}-\d{4,8}/g, m => m.replace(/\d/g, "*"));
+    out = out.replace(/\b\d{10,16}\b/g, m => "*".repeat(m.length));
+    out = out.replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g, "****@****.***");
+  }
+  state.nameMap.forEach(pair => {
+    if (pair.name && pair.replacement) {
+      out = out.split(pair.name).join(pair.replacement);
+    }
+  });
+  return out;
+}
+
+function addNamePair() {
+  state.nameMap.push({ id: Date.now() + Math.random(), name: "", replacement: "" });
+  renderNamePairs();
+}
+document.getElementById("btnAddNamePair").onclick = addNamePair;
+
+function renderNamePairs() {
+  const wrap = document.getElementById("nameMapWrap");
+  wrap.innerHTML = "";
+  state.nameMap.forEach(pair => {
+    const row = document.createElement("div");
+    row.className = "row-inline";
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.placeholder = "실명 (예: 이현우)";
+    nameInput.value = pair.name;
+    nameInput.oninput = () => pair.name = nameInput.value;
+    const arrow = document.createElement("span");
+    arrow.textContent = "→";
+    arrow.style.color = "var(--muted)";
+    const replInput = document.createElement("input");
+    replInput.type = "text";
+    replInput.placeholder = "대체어 (예: 고소인)";
+    replInput.value = pair.replacement;
+    replInput.oninput = () => pair.replacement = replInput.value;
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn ghost";
+    delBtn.textContent = "삭제";
+    delBtn.onclick = () => {
+      state.nameMap = state.nameMap.filter(x => x.id !== pair.id);
+      renderNamePairs();
+    };
+    row.appendChild(nameInput);
+    row.appendChild(arrow);
+    row.appendChild(replInput);
+    row.appendChild(delBtn);
+    wrap.appendChild(row);
+  });
+}
+
+// ===================== DOCX 파일로 저장 (API 불필요, JSZip으로 브라우저에서 직접 생성) =====================
+function escapeXml(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+async function downloadAsDocx(text, filenameBase) {
+  if (!text || !text.trim()) {
+    alert("저장할 내용이 비어있어요. 먼저 내용을 채워주세요.");
+    return;
+  }
+  if (typeof JSZip === "undefined") {
+    alert("파일 생성 라이브러리를 아직 불러오는 중이에요. 잠시 후 다시 시도해주세요 (인터넷 연결이 필요합니다).");
+    return;
+  }
+  const lines = text.split("\n");
+  const paragraphs = lines.map(line => {
+    const t = escapeXml(line);
+    return '<w:p><w:pPr><w:spacing w:line="360" w:lineRule="auto"/></w:pPr><w:r><w:rPr><w:rFonts w:eastAsia="맑은 고딕" w:cs="맑은 고딕"/><w:sz w:val="22"/></w:rPr><w:t xml:space="preserve">' + (t || " ") + "</w:t></w:r></w:p>";
+  }).join("");
+
+  const documentXml =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
+    "<w:body>" + paragraphs +
+    '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1417" w:right="1417" w:bottom="1417" w:left="1417"/></w:sectPr>' +
+    "</w:body></w:document>";
+
+  const contentTypes =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+    '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+    '<Default Extension="xml" ContentType="application/xml"/>' +
+    '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>' +
+    "</Types>";
+
+  const rootRels =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>' +
+    "</Relationships>";
+
+  const docRels =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"></Relationships>';
+
+  try {
+    const zip = new JSZip();
+    zip.file("[Content_Types].xml", contentTypes);
+    zip.folder("_rels").file(".rels", rootRels);
+    const wordFolder = zip.folder("word");
+    wordFolder.file("document.xml", documentXml);
+    wordFolder.folder("_rels").file("document.xml.rels", docRels);
+
+    const blob = await zip.generateAsync({
+      type: "blob",
+      mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filenameBase + ".docx";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  } catch (e) {
+    alert("파일 생성 중 오류가 발생했습니다. 다시 시도해주세요.");
+  }
+}
+
+function timestampStr() {
+  return new Date().toISOString().slice(0, 16).replace(/[-T:]/g, "");
+}
+
+function makeDownloadButton(label, getTextFn, filenamePrefix) {
+  const btn = document.createElement("button");
+  btn.className = "btn seal";
+  btn.style.marginTop = "10px";
+  btn.textContent = label;
+  btn.onclick = () => downloadAsDocx(getTextFn(), filenamePrefix + "_" + timestampStr());
+  return btn;
+}
+
+// ===================== 클립보드 =====================
+async function copyText(text, statusEl) {
+  try {
+    await navigator.clipboard.writeText(text);
+    statusEl.textContent = "복사됨";
+  } catch (e) {
+    statusEl.textContent = "복사 실패 - 직접 드래그해서 복사해주세요";
+  }
+  setTimeout(() => statusEl.textContent = "", 1800);
+}
+
+function makePromptExport(label, promptFn) {
+  const wrap = document.createElement("div");
+  wrap.style.marginTop = "6px";
+  const btn = document.createElement("button");
+  btn.className = "btn dashed";
+  btn.textContent = label + " (프롬프트 복사)";
+  const box = document.createElement("div");
+  box.style.display = "none";
+
+  const pre = document.createElement("div");
+  pre.className = "prompt-box";
+  const actions = document.createElement("div");
+  actions.className = "prompt-actions";
+  const copyBtn = document.createElement("button");
+  copyBtn.className = "btn ghost";
+  copyBtn.textContent = "프롬프트 복사";
+  const status = document.createElement("span");
+  status.className = "copy-status";
+
+  const claudeLink = document.createElement("a");
+  claudeLink.href = "https://claude.ai/new";
+  claudeLink.target = "_blank";
+  claudeLink.rel = "noopener noreferrer";
+  claudeLink.className = "btn ghost";
+  claudeLink.style.textDecoration = "none";
+  claudeLink.style.display = "inline-block";
+  claudeLink.textContent = "복사 후 Claude 열기 ↗";
+  claudeLink.onclick = () => copyText(pre.textContent, status);
+
+  const geminiLink = document.createElement("a");
+  geminiLink.href = "https://gemini.google.com/app";
+  geminiLink.target = "_blank";
+  geminiLink.rel = "noopener noreferrer";
+  geminiLink.className = "btn ghost";
+  geminiLink.style.textDecoration = "none";
+  geminiLink.style.display = "inline-block";
+  geminiLink.textContent = "복사 후 Gemini 열기 ↗";
+  geminiLink.onclick = () => copyText(pre.textContent, status);
+
+  const hint = document.createElement("div");
+  hint.className = "hint";
+  hint.textContent = "복사한 뒤 Gemini, Claude.ai, ChatGPT 등 원하는 AI 채팅창에 붙여넣으면 바로 답을 받을 수 있어요.";
+
+  actions.appendChild(copyBtn);
+  actions.appendChild(claudeLink);
+  actions.appendChild(geminiLink);
+  actions.appendChild(status);
+  box.appendChild(pre);
+  box.appendChild(actions);
+  box.appendChild(hint);
+
+  btn.onclick = () => {
+    const isOpen = box.style.display === "block";
+    box.style.display = isOpen ? "none" : "block";
+    btn.textContent = isOpen ? (label + " (프롬프트 복사)") : "닫기";
+    if (!isOpen) pre.textContent = promptFn();
+  };
+  copyBtn.onclick = () => copyText(pre.textContent, status);
+
+  wrap.appendChild(btn);
+  wrap.appendChild(box);
+  return wrap;
+}
+
+// ===================== 파일 OCR (Tesseract.js, API 불필요, 브라우저에서 직접 처리) =====================
+async function ocrImageFile(file, onProgress) {
+  const result = await Tesseract.recognize(file, "kor+eng", {
+    logger: m => { if (m.status === "recognizing text" && onProgress) onProgress(m.progress); }
+  });
+  return result.data.text;
+}
+
+async function ocrPdfFile(file, onProgress) {
+  if (typeof pdfjsLib === "undefined") throw new Error("pdf.js 로드 실패");
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let fullText = "";
+  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+    const page = await pdf.getPage(pageNum);
+    const viewport = page.getViewport({ scale: 2.0 });
+    const canvas = document.createElement("canvas");
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const ctx = canvas.getContext("2d");
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    const pageText = await ocrImageFile(canvas, onProgress);
+    fullText += (fullText ? "\n\n--- 다음 페이지 ---\n\n" : "") + pageText;
+  }
+  return fullText;
+}
+
+// 여러 장의 사진을 OCR로 이어붙일 때, 페이지 헤더 등이 반복되어 바로 이웃한 줄이
+// 완전히 똑같은 경우만 안전하게 하나로 정리 (내용이 조금이라도 다르면 절대 건드리지 않음)
+function removeAdjacentDuplicateLines(text) {
+  const lines = text.split("\n");
+  const out = [];
+  for (let i = 0; i < lines.length; i++) {
+    const cur = lines[i].trim();
+    const prev = out.length > 0 ? out[out.length - 1].trim() : null;
+    if (cur !== "" && cur === prev) continue;
+    out.push(lines[i]);
+  }
+  return out.join("\n");
+}
+
+function attachMultiFileOCRToElement(ta, mode) {
+  if (!ta) return;
+  const wrap = document.createElement("div");
+  wrap.style.display = "flex";
+  wrap.style.alignItems = "center";
+  wrap.style.gap = "10px";
+  wrap.style.marginTop = "6px";
+  wrap.style.marginBottom = "6px";
+
+  const label = document.createElement("label");
+  label.className = "btn ghost";
+  label.style.cursor = "pointer";
+  label.style.fontSize = "12.5px";
+  label.style.padding = "6px 12px";
+  label.textContent = "사진/PDF 업로드 (여러 장 가능, 브라우저에서 무료 인식)";
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".png,.jpg,.jpeg,.pdf";
+  input.multiple = true;
+  input.style.display = "none";
+  label.appendChild(input);
+
+  const status = document.createElement("span");
+  status.style.fontSize = "12px";
+  status.style.color = "#7C7566";
+
+  input.onchange = async () => {
+    const files = Array.from(input.files || []);
+    if (files.length === 0) return;
+    if (typeof Tesseract === "undefined") {
+      alert("OCR 라이브러리를 아직 불러오는 중이에요. 잠시 후 다시 시도해주세요 (인터넷 연결이 필요합니다).");
+      input.value = "";
+      return;
+    }
+    let combined = "";
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const ext = file.name.split(".").pop().toLowerCase();
+      status.textContent = "처리 중 (" + (i+1) + "/" + files.length + ") 0%";
+      try {
+        let text;
+        if (ext === "pdf") {
+          text = await ocrPdfFile(file, p => status.textContent = "처리 중 (" + (i+1) + "/" + files.length + ") " + Math.round(p*100) + "%");
+        } else {
+          text = await ocrImageFile(file, p => status.textContent = "처리 중 (" + (i+1) + "/" + files.length + ") " + Math.round(p*100) + "%");
+        }
+        combined += (combined ? "\n\n" : "") + "[파일: " + file.name + "]\n" + text.trim();
+      } catch (err) {
+        combined += (combined ? "\n\n" : "") + "[파일: " + file.name + " - 인식 실패]";
+      }
+    }
+    const cleaned = removeAdjacentDuplicateLines(combined);
+    ta.value = (mode === "append" && ta.value.trim()) ? ta.value.trim() + "\n\n" + cleaned : cleaned;
+    if (ta.oninput) ta.dispatchEvent(new Event("input"));
+    status.textContent = "완료 (" + files.length + "개 파일 처리됨, 인접 완전중복 줄만 자동 정리됨) - 페이지 경계와 인식 결과를 꼭 확인해주세요";
+    input.value = "";
+  };
+
+  wrap.appendChild(label);
+  wrap.appendChild(status);
+  ta.insertAdjacentElement("afterend", wrap);
+
+  const heicHint = document.createElement("div");
+  heicHint.className = "hint";
+  heicHint.style.marginTop = "2px";
+  heicHint.style.marginBottom = "10px";
+  heicHint.textContent = "⚠ 아이폰은 기본 카메라 설정이 HEIC 형식이라 인식이 안 될 수 있어요. 설정 → 카메라 → 포맷 → \"높은 호환성\"으로 바꾼 뒤 촬영해주세요.";
+  wrap.insertAdjacentElement("afterend", heicHint);
+
+  return wrap;
+}
+
+function attachMultiFileOCR(textareaId, mode) {
+  return attachMultiFileOCRToElement(document.getElementById(textareaId), mode);
+}
+
+// ===================== 죄종 pill (1번 탭) =====================
+const crimePillsEl = document.getElementById("crime-pills");
+function renderCrimePills(container) {
+  CRIME_TYPES.forEach(c => {
+    const b = document.createElement("button");
+    b.className = "pill" + (c.id === state.crimeType ? " active" : "");
+    b.textContent = c.label;
+    b.dataset.crimeId = c.id;
+    b.onclick = () => {
+      state.crimeType = c.id;
+      document.querySelectorAll("#crime-pills .pill").forEach(p => p.classList.remove("active"));
+      document.querySelectorAll('#crime-pills .pill[data-crime-id="' + c.id + '"]').forEach(p => p.classList.add("active"));
+      refreshFactPrompt();
+    };
+    container.appendChild(b);
+  });
+}
+renderCrimePills(crimePillsEl);
+
+// ===================== 탭 전환 =====================
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("panel-" + btn.dataset.tab).classList.add("active");
+    if (btn.dataset.tab === "report") {
+      const reportFact = document.getElementById("reportFact");
+      const tab1Fact = document.getElementById("generatedFact").value;
+      if (!reportFact.value.trim() && tab1Fact.trim()) {
+        reportFact.value = tab1Fact;
+      }
+    }
+    if (btn.dataset.tab === "prep") {
+      refreshPrepPrompt();
+    }
+  };
+});
+
+// ===================== 범죄사실 프롬프트 =====================
+function buildFactPrompt() {
+  const complaintText = document.getElementById("complaintText").value;
+  const statementText = document.getElementById("statementText").value;
+  return "너는 대한민국 경찰 수사서류 작성을 돕는 어시스턴트야. 아래 자료를 바탕으로 '" + state.crimeType + "' 범죄사실을 공문서체(\"~하였다\")로 작성해줘.\n\n" +
+"[문형 지침]\n" + PATTERN_GUIDE[state.crimeType] + "\n\n" +
+"[작성 규칙]\n" +
+"- 감정적·주관적 표현 금지, 사실관계만 서술\n" +
+"- 자료에 없는 구체적 금액·날짜는 지어내지 말고 [ ]로 비워둘 것\n" +
+"- 실명 대신 '피의자', '피해자' 호칭 사용\n" +
+crimeSpecificRules(state.crimeType) + "\n" +
+"- 마지막 문장은 죄명에 맞는 결어로 마무리\n" +
+"- 판례·법조문은 인용하지 말 것 (사실관계만)\n" +
+"- 범죄사실 본문만 출력, 다른 설명 붙이지 말 것\n\n" +
+"[고소장/진정서/고발장 내용]\n" + (complaintText || "(입력 없음)") + "\n\n" +
+"[진술서/진술조서 내용]\n" + (statementText || "(입력 없음)") + "\n\n" +
+"위 내용으로 범죄사실을 작성해줘.";
+}
+
+let factPromptExportEl = null;
+function refreshFactPrompt() {
+  const wrap = document.getElementById("promptFactWrap");
+  wrap.innerHTML = "";
+  factPromptExportEl = makePromptExport("AI에게 범죄사실 물어보기", buildFactPrompt);
+  wrap.appendChild(factPromptExportEl);
+}
+refreshFactPrompt();
+attachMultiFileOCR("complaintText", "replace");
+attachMultiFileOCR("statementText", "append");
+document.getElementById("factDownloadWrap").appendChild(
+  makeDownloadButton("파일로 저장 (.docx)", () => document.getElementById("generatedFact").value, "범죄사실")
+);
+
+// ===================== 피의자 목록 =====================
+function renderSuspects() {
+  const wrap = document.getElementById("suspectsWrap");
+  wrap.innerHTML = "";
+  state.suspects.forEach((s) => {
+    const row = document.createElement("div");
+    row.className = "row-inline";
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.placeholder = "피의자 이름 (성명불상이면 비워두세요)";
+    nameInput.value = s.name;
+    nameInput.oninput = () => { s.name = nameInput.value; renderSuspectStatementItems(); };
+    const crimeSelect = document.createElement("select");
+    crimeSelect.style.flex = "0 0 180px";
+    CRIME_TYPES.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c.id;
+      opt.textContent = c.label;
+      if (c.id === s.crimeType) opt.selected = true;
+      crimeSelect.appendChild(opt);
+    });
+    crimeSelect.onchange = () => s.crimeType = crimeSelect.value;
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn ghost";
+    delBtn.textContent = "삭제";
+    delBtn.onclick = () => {
+      if (state.suspects.length <= 1) { alert("최소 1명은 있어야 해요."); return; }
+      state.suspects = state.suspects.filter(x => x.id !== s.id);
+      state.suspectStatementItems = state.suspectStatementItems.filter(x => x.suspectId !== s.id);
+      renderSuspects();
+      renderSuspectStatementItems();
+    };
+    row.appendChild(nameInput);
+    row.appendChild(crimeSelect);
+    row.appendChild(delBtn);
+    wrap.appendChild(row);
+  });
+}
+function addSuspect() {
+  state.suspects.push({ id: "sp_" + Date.now() + Math.random(), name: "", crimeType: "사기" });
+  renderSuspects();
+}
+document.getElementById("btnAddSuspect").onclick = addSuspect;
+
+function suspectsSummary() {
+  return state.suspects.map(s => (s.name || "성명불상") + "(" + s.crimeType + ")").join(", ");
+}
+
+// ===================== 반복 가능한 자료 목록 공통 렌더러 =====================
+function renderRepeatableList(containerEl, list, opts) {
+  containerEl.innerHTML = "";
+  list.forEach(item => {
+    const row = document.createElement("div");
+    row.className = "card";
+    const top = document.createElement("div");
+    top.className = "row-inline";
+
+    if (opts.suspectSelector) {
+      const sel = document.createElement("select");
+      sel.style.flex = "0 0 180px";
+      state.suspects.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s.id;
+        opt.textContent = s.name || "(이름미입력)";
+        if (s.id === item.suspectId) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      sel.onchange = () => item.suspectId = sel.value;
+      top.appendChild(sel);
+    }
+
+    const labelInput = document.createElement("input");
+    labelInput.type = "text";
+    labelInput.placeholder = opts.labelPlaceholder || "차수/회차";
+    labelInput.value = item.label;
+    labelInput.style.maxWidth = "140px";
+    labelInput.oninput = () => item.label = labelInput.value;
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn ghost";
+    delBtn.textContent = "삭제";
+    delBtn.onclick = () => {
+      const idx = list.indexOf(item);
+      if (idx > -1) {
+        if (list.length <= 1) { alert("최소 1개는 있어야 해요."); return; }
+        list.splice(idx, 1);
+      }
+      opts.rerender();
+    };
+
+    top.appendChild(labelInput);
+    top.appendChild(delBtn);
+
+    const ta = document.createElement("textarea");
+    ta.rows = 5;
+    ta.placeholder = opts.contentPlaceholder || "";
+    ta.value = item.content;
+    ta.oninput = () => item.content = ta.value;
+
+    row.appendChild(top);
+    row.appendChild(ta);
+    containerEl.appendChild(row);
+    attachMultiFileOCRToElement(ta, "replace");
+  });
+}
+
+function renderComplaintItems() {
+  renderRepeatableList(document.getElementById("complaintItemsWrap"), state.complaintItems, {
+    labelPlaceholder: "차수 (예: 1차)",
+    contentPlaceholder: "고소장/진정서/고발장 원문을 붙여넣으세요...",
+    rerender: renderComplaintItems,
+  });
+}
+document.getElementById("btnAddComplaintItem").onclick = () => {
+  state.complaintItems.push({ id: "c_" + Date.now() + Math.random(), label: (state.complaintItems.length + 1) + "차", content: "" });
+  renderComplaintItems();
+};
+
+function renderVictimStatementItems() {
+  renderRepeatableList(document.getElementById("victimStatementItemsWrap"), state.victimStatementItems, {
+    labelPlaceholder: "차수 (예: 1차)",
+    contentPlaceholder: "고소인/참고인 진술조서 원문을 붙여넣으세요...",
+    rerender: renderVictimStatementItems,
+  });
+}
+document.getElementById("btnAddVictimStatementItem").onclick = () => {
+  state.victimStatementItems.push({ id: "v_" + Date.now() + Math.random(), label: (state.victimStatementItems.length + 1) + "차", content: "" });
+  renderVictimStatementItems();
+};
+
+function renderSuspectStatementItems() {
+  renderRepeatableList(document.getElementById("suspectStatementItemsWrap"), state.suspectStatementItems, {
+    suspectSelector: true,
+    labelPlaceholder: "회차 (예: 1회)",
+    contentPlaceholder: "피의자신문조서 원문을 붙여넣으세요...",
+    rerender: renderSuspectStatementItems,
+  });
+}
+document.getElementById("btnAddSuspectStatementItem").onclick = () => {
+  const firstSuspect = state.suspects[0];
+  state.suspectStatementItems.push({
+    id: "s_" + Date.now() + Math.random(),
+    suspectId: firstSuspect ? firstSuspect.id : null,
+    label: (state.suspectStatementItems.length + 1) + "회",
+    content: "",
+  });
+  renderSuspectStatementItems();
+};
+
+// ===================== 수사결과보고서: 원자료 소스 =====================
+function getReportSources() {
+  const complaintText = state.complaintItems.map(c => "[고소장/진정서/고발장 " + (c.label || "") + "]\n" + c.content).join("\n\n");
+  const victimText = state.victimStatementItems.map(v => "[고소인/참고인 진술조서 " + (v.label || "") + "]\n" + v.content).join("\n\n");
+  const suspectText = state.suspectStatementItems.map(ss => {
+    const sus = state.suspects.find(x => x.id === ss.suspectId);
+    const name = sus ? (sus.name || "성명불상") : "(피의자 미지정)";
+    return "[피의자신문조서 - " + name + " " + (ss.label || "") + "]\n" + ss.content;
+  }).join("\n\n");
+  const miscText = state.miscItems.map(m => "[" + (m.label || "(자료명 미입력)") + "]\n" + m.content).join("\n\n") || "";
+  const precedentText = state.precedents.map(p => "[" + (p.label || "(판례명/번호 미입력)") + "]\n" + p.content).join("\n\n") || "";
+  return {
+    complaint: maskPII(complaintText),
+    victimStatement: maskPII(victimText),
+    suspectStatement: maskPII(suspectText),
+    misc: maskPII(miscText),
+    precedents: precedentText,
+    generatedFact: maskPII(document.getElementById("reportFact").value),
+    factsAgreed: maskPII(document.getElementById("factsAgreed").value),
+    suspectsSummary: suspectsSummary(),
+  };
+}
+
+// ===================== 기타 수사보고서 (여러 개) =====================
+function addMiscItem() {
+  state.miscItems.push({ id: Date.now() + Math.random(), label: "", content: "" });
+  renderMiscItems();
+}
+document.getElementById("btnAddMiscItem").onclick = addMiscItem;
+
+function renderMiscItems() {
+  const wrap = document.getElementById("miscItemsWrap");
+  wrap.innerHTML = "";
+  state.miscItems.forEach(item => {
+    const row = document.createElement("div");
+    row.className = "card";
+    const top = document.createElement("div");
+    top.className = "row-inline";
+    const labelInput = document.createElement("input");
+    labelInput.type = "text";
+    labelInput.placeholder = "자료명 (예: 디지털포렌식 분석결과보고서)";
+    labelInput.value = item.label;
+    labelInput.oninput = () => item.label = labelInput.value;
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn ghost";
+    delBtn.textContent = "삭제";
+    delBtn.onclick = () => { state.miscItems = state.miscItems.filter(x => x.id !== item.id); renderMiscItems(); };
+    top.appendChild(labelInput);
+    top.appendChild(delBtn);
+    const ta = document.createElement("textarea");
+    ta.rows = 4;
+    ta.placeholder = "이 자료의 구체적 내용을 붙여넣으세요...";
+    ta.value = item.content;
+    ta.oninput = () => item.content = ta.value;
+    row.appendChild(top);
+    row.appendChild(ta);
+    wrap.appendChild(row);
+    attachMultiFileOCRToElement(ta, "replace");
+  });
+}
+
+// ===================== 판례 자료함 =====================
+function addPrecedentItem() {
+  state.precedents.push({ id: Date.now() + Math.random(), label: "", content: "" });
+  renderPrecedents();
+}
+document.getElementById("btnAddPrecedentItem").onclick = addPrecedentItem;
+
+function renderPrecedents() {
+  const wrap = document.getElementById("precedentItemsWrap");
+  wrap.innerHTML = "";
+  state.precedents.forEach(item => {
+    const row = document.createElement("div");
+    row.className = "card";
+    const top = document.createElement("div");
+    top.className = "row-inline";
+    const labelInput = document.createElement("input");
+    labelInput.type = "text";
+    labelInput.placeholder = "판례명/사건번호 (예: 대법원 2003도5382)";
+    labelInput.value = item.label;
+    labelInput.oninput = () => item.label = labelInput.value;
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn ghost";
+    delBtn.textContent = "삭제";
+    delBtn.onclick = () => { state.precedents = state.precedents.filter(x => x.id !== item.id); renderPrecedents(); };
+    top.appendChild(labelInput);
+    top.appendChild(delBtn);
+    const ta = document.createElement("textarea");
+    ta.rows = 4;
+    ta.placeholder = "판례 내용(요지, 판시사항 등)을 붙여넣으세요...";
+    ta.value = item.content;
+    ta.oninput = () => item.content = ta.value;
+    row.appendChild(top);
+    row.appendChild(ta);
+    wrap.appendChild(row);
+    attachMultiFileOCRToElement(ta, "replace");
+  });
+}
+
+// ===================== 사건 유형 전환 =====================
+function updateCaseModeUI() {
+  const mode = state.caseMode;
+  document.getElementById("confessionBlock").style.display = mode === "confession" ? "block" : "none";
+  document.getElementById("factsSection").style.display = mode === "confession" ? "none" : "block";
+  document.getElementById("disputesSection").style.display = mode === "dispute" ? "block" : "none";
+}
+document.querySelectorAll(".mode-btn").forEach(btn => {
+  btn.onclick = () => {
+    state.caseMode = btn.dataset.mode;
+    document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    updateCaseModeUI();
+  };
+});
+updateCaseModeUI();
+
+// ===================== 추가 항목 =====================
+function addExtraItem() {
+  const item = { id: Date.now() + Math.random(), label: "", included: true, content: "" };
+  state.extraItems.push(item);
+  renderExtraItems();
+}
+document.getElementById("btnAddExtraItem").onclick = addExtraItem;
+
+function renderExtraItems() {
+  const wrap = document.getElementById("extraItems");
+  wrap.innerHTML = "";
+  state.extraItems.forEach(item => {
+    const row = document.createElement("div");
+    row.className = "card";
+    const top = document.createElement("div");
+    top.className = "row-inline";
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = item.included;
+    cb.onchange = () => item.included = cb.checked;
+    const labelInput = document.createElement("input");
+    labelInput.type = "text";
+    labelInput.placeholder = "예: 나. 고소인 주장, 다. 피의자 주장, 라. 관련 판례 등";
+    labelInput.value = item.label;
+    labelInput.oninput = () => item.label = labelInput.value;
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn ghost";
+    delBtn.textContent = "삭제";
+    delBtn.onclick = () => { state.extraItems = state.extraItems.filter(x => x.id !== item.id); renderExtraItems(); };
+    top.appendChild(cb);
+    top.appendChild(labelInput);
+    top.appendChild(delBtn);
+    const ta = document.createElement("textarea");
+    ta.rows = 3;
+    ta.placeholder = "비워두면 '수사결과보고서 작성' 시 AI가 원자료를 확인해서 자동으로 채워줍니다. 원자료에도 없으면 그때 '작성불가(이유: 정보부족)'로 표시돼요.";
+    ta.value = item.content;
+    ta.oninput = () => item.content = ta.value;
+    row.appendChild(top);
+    row.appendChild(ta);
+    wrap.appendChild(row);
+  });
+}
+
+// ===================== 인정되는 사실 프롬프트 =====================
+function buildFactsAgreedPrompt() {
+  const s = getReportSources();
+  return "너는 경찰 수사결과보고서의 '다툼이 없이 인정되는 사실' 항목을 작성하는 어시스턴트야.\n" +
+"- 고소인/참고인 진술과 피의자 진술이 서로 일치하거나, 객관적 증거(계좌내역 등)로 확인되는 사실만 골라줘\n" +
+"- 어미는 반드시 \"~한 사실이 인정된다\" 또는 \"~한 사실이 확인된다\"로 끝낼 것. \"~하였다\"(범죄사실 문체)를 쓰지 말 것\n" +
+"- 중요: 고소인(피해자) 진술 하나에만 의존하는 사실은, 그 내용을 피의자가 신문조서에서 스스로 인정했거나(자백) 객관적 증거(대화 캡처, 녹취, 문서 등)로 뒷받침되지 않는 한 여기 포함하지 말 것. 특히 '상대방이 몰래 무엇을 했다/알고 있었다'처럼 상대방의 내심이나 상대방만 아는 행위에 관한 사실은, 상대방의 자백이나 객관적 증거 없이 고소인 진술만으로 단정하지 말 것 — 이런 건 실제로 다툼이 있을 수 있으므로 '쟁점'으로 넘길 것\n" +
+"- 서로 다투는 부분은 여기 넣지 말고 제외해줘 (그건 '쟁점'에서 다룸)\n" +
+"- ①②③... 번호를 붙여서, 각 사실 뒤에 근거를 괄호로 표시 (예: \"~한 사실이 인정된다 (진술조서 제0쪽)\")\n\n" +
+"[범죄사실]\n" + (s.generatedFact || "(없음)") + "\n\n" +
+"[고소장/진정서]\n" + (s.complaint || "(없음)") + "\n\n" +
+"[고소인/참고인 진술조서]\n" + (s.victimStatement || "(없음)") + "\n\n" +
+"[피의자신문조서]\n" + (s.suspectStatement || "(없음, 있다면 대조해서 일치하는 부분만 인정사실로)") + "\n\n" +
+"[기타 수사보고서/압수물 분석]\n" + (s.misc || "(없음)") + "\n\n" +
+"위 자료로 '다툼이 없이 인정되는 사실'을 작성해줘.";
+}
+document.getElementById("promptFactsAgreedWrap").appendChild(makePromptExport("AI에게 인정되는 사실 물어보기", buildFactsAgreedPrompt));
+
+// ===================== 쟁점 찾기 프롬프트 =====================
+function buildDisputeFindPrompt() {
+  const s = getReportSources();
+  return "너는 경찰 수사결과보고서 작성을 돕는 어시스턴트야. 아래 자료를 분석해서, 고소인과 피의자의 진술이 서로 엇갈리는(다투는) 지점을 '쟁점'으로 추려줘.\n\n" +
+"- 양측이 다투지 않는 사실은 제외하고, 진술이 갈리는 부분만\n" +
+"- 피의자신문조서가 없다면 쟁점을 만들지 말고 \"피의자 진술이 확보되지 않아 쟁점을 특정할 수 없습니다\"라고만 답해줘\n" +
+"- 각 쟁점마다 제목 + 왜 쟁점인지 1문장 설명\n" +
+"- 쟁점별로 아래 형식을 갖춰서 답해줘:\n" +
+"  나. [쟁점 제목]\n" +
+"    1) 고소인의 주장\n" +
+"    2) 피의자의 주장\n" +
+"    3) 관련 판례 (아래 판례 자료함에 있는 것 중 관련 있는 것만, 없으면 비워둘 것)\n" +
+"    4) 검토 (판례를 그대로 베끼지 말고 본 사건 사실관계에 적용하는 방식으로)\n\n" +
+"[피의자 목록]\n" + s.suspectsSummary + "\n\n" +
+"[범죄사실]\n" + (s.generatedFact || "(없음)") + "\n\n" +
+"[고소장/진정서]\n" + (s.complaint || "(없음)") + "\n\n" +
+"[고소인/참고인 진술조서]\n" + (s.victimStatement || "(없음)") + "\n\n" +
+"[피의자신문조서]\n" + (s.suspectStatement || "(없음)") + "\n\n" +
+"[기타 수사보고서/압수물 분석]\n" + (s.misc || "(없음)") + "\n\n" +
+"[판례 자료함 - 여기 있는 판례만 사용, 없는 판례를 지어내지 말 것]\n" + (s.precedents || "(없음)") + "\n\n" +
+"[다툼이 없이 인정되는 사실 - 참고]\n" + (s.factsAgreed || "(없음)") + "\n\n" +
+"위 자료로 쟁점을 찾아서 나~라 순서로 작성해줘.";
+}
+document.getElementById("promptDisputeWrap").appendChild(makePromptExport("AI에게 쟁점 물어보기", buildDisputeFindPrompt));
+
+// ===================== 판례 관련성 확인 =====================
+function buildPrecedentRelevancePrompt() {
+  const s = getReportSources();
+  const factsAgreed = maskPII(document.getElementById("factsAgreed").value);
+  if (state.precedents.length === 0) {
+    return "판례 자료함에 등록된 판례가 없습니다. 먼저 '판례 추가'로 판례를 등록해주세요.";
+  }
+  const precedentText = state.precedents
+    .map((p, i) => "판례 " + (i+1) + ". [" + (p.label || "(판례명 미입력)") + "]\n" + p.content)
+    .join("\n\n");
+  return "너는 경찰 수사결과보고서 작성을 돕는 어시스턴트야. 아래 사건 사실관계와, 판례 자료함에 등록된 판례들을 하나씩 대조해서 각 판례가 이 사건과 관련이 있는지 판단해줘.\n\n" +
+"[판단 방식]\n" +
+"- 판례마다 '관련있음' 또는 '관련없음'을 먼저 밝히고, 그 이유를 1~2문장으로 설명할 것\n" +
+"- '관련있음'인 경우, 어느 쟁점/사실관계에 어떻게 적용될 수 있는지도 간단히 언급할 것\n" +
+"- 억지로 관련짓지 말고, 정말 사안이 다르면 '관련없음'이라고 명확히 답할 것\n" +
+"- 판례 원문을 길게 베끼지 말고 요지만 언급할 것\n" +
+"- 만약 자료함에 없는 판례를 새로 언급하거나 추천한다면, 그 판례번호 뒤에 반드시 \"(※ 실제 존재 여부·판시내용 일치 여부를 casenote.kr 등에서 직접 확인 필요)\"라고 표시할 것. 지어낸 판례번호를 마치 확실한 것처럼 제시하지 말 것\n\n" +
+"[사건 개요]\n" + "피의자: " + s.suspectsSummary + "\n\n" +
+"[범죄사실]\n" + (s.generatedFact || "(없음)") + "\n\n" +
+"[다툼이 없이 인정되는 사실]\n" + (factsAgreed || "(없음)") + "\n\n" +
+"[고소장/진정서]\n" + (s.complaint || "(없음)") + "\n\n" +
+"[피의자신문조서]\n" + (s.suspectStatement || "(없음)") + "\n\n" +
+"[판례 자료함]\n" + precedentText + "\n\n" +
+"위 판례들을 하나씩 대조해서 관련성을 판단해줘.";
+}
+document.getElementById("promptPrecedentRelevanceWrap").appendChild(makePromptExport("AI에게 판례 관련성 일괄 확인 물어보기", buildPrecedentRelevancePrompt));
+
+// ===================== 쟁점 카드 =====================
+document.getElementById("btnAddDispute").onclick = () => addDispute();
+
+document.getElementById("btnParseDisputes").onclick = () => {
+  const raw = document.getElementById("disputeRawAnswer").value;
+  if (!raw.trim()) {
+    alert("먼저 AI 답변을 붙여넣어주세요.");
+    return;
+  }
+  const blockRegex = /(?:^|\n)\s*(?:[가-힣]\.|쟁점\s*\d+[.:]?)\s*(.+)/g;
+  const matches = [...raw.matchAll(blockRegex)];
+  if (matches.length === 0) {
+    alert("쟁점 구분을 찾지 못했어요. AI 답변이 '나. 쟁점제목' 형식으로 시작하는지 확인해주세요. 형식이 다르면 '쟁점 직접 추가'로 만들어서 붙여넣어 주세요.");
+    return;
+  }
+  const blocks = [];
+  for (let i = 0; i < matches.length; i++) {
+    const start = matches[i].index;
+    const end = i + 1 < matches.length ? matches[i+1].index : raw.length;
+    const title = matches[i][1].trim();
+    const body = raw.slice(start, end);
+    blocks.push({ title, body });
+  }
+
+  function extractSub(body, startPatterns, endPatterns) {
+    const startRe = new RegExp("(?:" + startPatterns.join("|") + ")\\s*", "i");
+    const startMatch = body.match(startRe);
+    if (!startMatch) return "";
+    const from = startMatch.index + startMatch[0].length;
+    const endRe = new RegExp("(?:" + endPatterns.join("|") + ")", "i");
+    const rest = body.slice(from);
+    const endMatch = rest.match(endRe);
+    const to = endMatch ? endMatch.index : rest.length;
+    return rest.slice(0, to).trim();
+  }
+
+  let created = 0;
+  blocks.forEach(b => {
+    const complainant = extractSub(b.body, ["1\\)\\s*고소인[^\\n]*"], ["2\\)\\s*피의자", "3\\)\\s*관련\\s*판례", "4\\)\\s*검토"]);
+    const suspect = extractSub(b.body, ["2\\)\\s*피의자[^\\n]*"], ["3\\)\\s*관련\\s*판례", "4\\)\\s*검토"]);
+    const precedent = extractSub(b.body, ["3\\)\\s*관련\\s*판례[^\\n]*"], ["4\\)\\s*검토"]);
+    const review = extractSub(b.body, ["4\\)\\s*검토[^\\n]*"], ["$^"]);
+    const id = Date.now() + Math.random() + created;
+    const d = { id, title: b.title, complainant, suspect, precedent, review };
+    state.disputes.push(d);
+    renderDisputeCard(d);
+    created++;
+  });
+  document.getElementById("disputeRawAnswer").value = "";
+  alert(created + "개의 쟁점 카드를 만들었습니다. 내용을 확인하고 필요하면 직접 수정해주세요.");
+};
+
+function addDispute(title, complainant, suspect, precedent) {
+  const id = Date.now() + Math.random();
+  const d = { id, title: title || "", complainant: complainant || "", suspect: suspect || "", precedent: precedent || "", review: "" };
+  state.disputes.push(d);
+  renderDisputeCard(d);
+}
+
+function renderDisputeCard(d) {
+  const container = document.getElementById("disputeCards");
+  const card = document.createElement("div");
+  card.className = "card";
+
+  const titleInput = document.createElement("input");
+  titleInput.type = "text";
+  titleInput.className = "card-title-input";
+  titleInput.placeholder = "쟁점 제목 (예: 차용금 용도에 관한 기망 유무)";
+  titleInput.value = d.title;
+  titleInput.oninput = () => d.title = titleInput.value;
+
+  const delRow = document.createElement("div");
+  delRow.style.textAlign = "right";
+  delRow.style.marginBottom = "6px";
+  const delBtn = document.createElement("button");
+  delBtn.className = "btn ghost";
+  delBtn.textContent = "이 쟁점 삭제";
+  delBtn.onclick = () => {
+    state.disputes = state.disputes.filter(x => x.id !== d.id);
+    card.remove();
+  };
+  delRow.appendChild(delBtn);
+
+  const twoCol = document.createElement("div");
+  twoCol.className = "two-col";
+
+  function fieldBlock(labelText, key, rows) {
+    const wrap = document.createElement("div");
+    const lab = document.createElement("div");
+    lab.className = "label";
+    lab.textContent = labelText;
+    const ta = document.createElement("textarea");
+    ta.rows = rows;
+    ta.value = d[key];
+    ta.oninput = () => d[key] = ta.value;
+    wrap.appendChild(lab);
+    wrap.appendChild(ta);
+    return wrap;
+  }
+
+  twoCol.appendChild(fieldBlock("1) 고소인 주장", "complainant", 4));
+  twoCol.appendChild(fieldBlock("2) 피의자 주장", "suspect", 4));
+
+  const precedentBlock = fieldBlock("3) 관련 판례 (위 판례 자료함에서 옮겨 적기)", "precedent", 3);
+  const reviewBlock = fieldBlock("4) 검토", "review", 4);
+
+  const reviewPromptWrap = document.createElement("div");
+  reviewPromptWrap.appendChild(makePromptExport("AI에게 이 쟁점 검토 물어보기", () => buildReviewPrompt(d)));
+
+  card.appendChild(titleInput);
+  card.appendChild(delRow);
+  card.appendChild(twoCol);
+  card.appendChild(precedentBlock);
+  card.appendChild(reviewBlock);
+  card.appendChild(reviewPromptWrap);
+  container.appendChild(card);
+}
+
+function buildReviewPrompt(d) {
+  const factsAgreed = maskPII(document.getElementById("factsAgreed").value);
+  const complainant = maskPII(d.complainant);
+  const suspect = maskPII(d.suspect);
+  return "너는 경찰 수사결과보고서의 '검토' 항목을 작성하는 어시스턴트야.\n" +
+"- 먼저 아래 [관련 판례]가 이 쟁점과 실제로 관련이 있는지부터 판단할 것\n" +
+"- 관련이 없거나 사안이 달라서 적용하기 어렵다면, 억지로 끼워맞추지 말고 검토 맨 앞에 \"※ 제시된 판례는 본 쟁점과 관련성이 낮음(이유: ○○)\"이라고 명시한 뒤, 판례 적용 없이 인정되는 사실과 양측 주장만으로 검토를 작성할 것\n" +
+"- 관련이 있다면, 판례를 그대로 베끼지 말고 판례의 법리를 본 사건 사실관계에 적용하는 방식으로 서술 (\"~판례의 법리를 본 사건에 적용하면\" 같은 논증 연결 표현 사용)\n" +
+"- 중립적·객관적 어조, 결론까지 도출\n\n" +
+"[다툼이 없이 인정되는 사실]\n" + (factsAgreed || "(없음)") + "\n\n" +
+"[쟁점]\n" + (d.title || "(제목 미입력)") + "\n\n" +
+"[고소인 주장]\n" + (complainant || "(없음)") + "\n\n" +
+"[피의자 주장]\n" + (suspect || "(없음)") + "\n\n" +
+"[관련 판례]\n" + (d.precedent || "(없음)") + "\n\n" +
+"위 내용으로 '검토' 문단을 작성해줘. 판례 관련성 판단부터 시작해줘.";
+}
+
+// ===================== 전체 보고서 프롬프트 & 조합 =====================
+function buildFullReportPrompt() {
+  const decision = document.getElementById("decision").value;
+  const s = getReportSources();
+  let factsBlock;
+  let formatDesc;
+
+  if (state.caseMode === "confession") {
+    const confession = maskPII(document.getElementById("confession").value);
+    const confessionEvidence = maskPII(document.getElementById("confessionEvidence").value);
+    factsBlock = "[피의자의 자백]\n" + (confession || "(이 칸은 비어있음 - 아래 피의자신문조서 등 원자료에서 자백 내용을 찾아 정리할 것)") +
+      "\n\n[자백에 대한 보강증거]\n" + (confessionEvidence || "(이 칸은 비어있음 - 원자료에서 자백을 뒷받침하는 증거를 찾아 정리할 것)");
+    formatDesc = "가. 피의자의 자백 / 나. 자백에 대한 보강증거 / 추가항목(있으면) / 마지막. 결론";
+  } else if (state.caseMode === "unspecified") {
+    const factsAgreed = maskPII(document.getElementById("factsAgreed").value);
+    factsBlock = "[다툼이 없이 인정되는 사실]\n" + (factsAgreed || "(없음)");
+    formatDesc = "가. 다툼이 없이 인정되는 사실 / 이후 [추가 항목]에 사용자가 직접 정의한 항목들을 나.다.라. 순서로 그대로 사용 (이 사건은 피의자 미특정 또는 쟁점형이 아닌 사건이라 '쟁점' 구조를 쓰지 않음) / 마지막. 결론";
+  } else {
+    const factsAgreed = maskPII(document.getElementById("factsAgreed").value);
+    const disputesText = state.disputes.map((d,i) => {
+      return "쟁점" + (i+1) + ". " + d.title + "\n- 고소인 주장: " + (maskPII(d.complainant) || "(없음)") + "\n- 피의자 주장: " + (maskPII(d.suspect) || "(없음)") + "\n- 관련 판례: " + (d.precedent || "(없음)");
+    }).join("\n\n") || "(쟁점 미입력)";
+    factsBlock = "[다툼이 없이 인정되는 사실]\n" + (factsAgreed || "(없음)") + "\n\n[쟁점별 정리]\n" + disputesText;
+    formatDesc = "가. 다툼이 없이 인정되는 사실 / 나·다·... 각 쟁점(1)고소인주장 2)피의자주장 3)관련판례 4)검토) / 추가항목(있으면) / 마지막. 결론";
+  }
+
+  const extraText = state.extraItems.filter(x => x.included).map(x => {
+    const filled = x.content.trim();
+    return "- " + (x.label || "(항목명 미입력)") + ": " + (filled ? maskPII(filled) : "(이 칸은 비어있음 - 아래 원자료를 확인해서 관련 내용이 있으면 그걸로 작성하고, 원자료 어디에도 없을 때만 작성불가로 표기할 것)");
+  }).join("\n") || "(없음)";
+
+  return "너는 대한민국 경찰 수사결과보고서 작성을 돕는 어시스턴트야. 아래 자료로 이 사건의 '6. 수사결과 및 의견' 항목 전체를 완성해줘.\n\n" +
+"[사건 개요] 피의자: " + s.suspectsSummary + "\n\n" +
+"[작성 형식 - " + (state.caseMode === "confession" ? "자백형" : state.caseMode === "unspecified" ? "불특정형" : "쟁점형") + "]\n" + formatDesc + "\n\n" +
+"[추가 항목 - 체크된 것만 포함]\n" + extraText + "\n\n" +
+"[추가 항목 및 빈칸 작성 규칙 - 중요]\n" +
+"- 화면(또는 위 각 항목)에서 비어있다고 바로 \"작성불가(이유: 정보부족)\"로 쓰지 말 것\n" +
+"- 반드시 아래 [원자료]를 먼저 확인해서, 관련된 내용이 원자료 어디엔가 있으면 그 내용을 근거로 작성할 것\n" +
+"- 원자료를 다 확인해도 관련 내용이 전혀 없을 때만 \"작성불가(이유: 정보부족)\"로 표기할 것\n\n" +
+"[원자료 - 빈칸 판단 시 반드시 참고]\n" +
+"고소장/진정서: " + (s.complaint || "(없음)") + "\n\n" +
+"고소인/참고인 진술조서: " + (s.victimStatement || "(없음)") + "\n\n" +
+"피의자신문조서: " + (s.suspectStatement || "(없음)") + "\n\n" +
+"기타 수사보고서: " + (s.misc || "(없음)") + "\n\n" +
+"[작성 규칙]\n" +
+"- 공문서체, 중립적·객관적 어조\n" +
+"- '다툼이 없이 인정되는 사실' 항목의 각 사실은 어미를 \"~한 사실이 인정된다\" 또는 \"~한 사실이 확인된다\"로 끝낼 것(\"~하였다\"는 범죄사실 문체이므로 쓰지 말 것). 고소인 진술 하나에만 의존하고 피의자의 자백이나 객관적 증거로 뒷받침되지 않는 사실(특히 상대방의 내심·상대방만 아는 행위)은 이 항목에 넣지 말고 쟁점으로 분류할 것\n" +
+"- 판례는 그대로 베끼지 말고 본 사건에 적용하는 방식으로 검토\n" +
+"- 결론은 다음 중 하나로: " + DECISIONS_LIST.join(" / ") + "\n\n" +
+"[범죄사실]\n" + (s.generatedFact || "(없음)") + "\n\n" +
+factsBlock + "\n\n" +
+"[희망 결정 방향 - 참고용]\n" + decision + "\n\n" +
+"위 자료로 '6. 수사결과 및 의견' 전체를 완성해줘.";
+}
+document.getElementById("promptFullWrap").appendChild(makePromptExport("AI에게 전체 보고서 물어보기", buildFullReportPrompt));
+document.getElementById("assembledDownloadWrap").appendChild(
+  makeDownloadButton("저장 (다운로드, .docx)", () => document.getElementById("assembledText").textContent, "수사결과보고서")
+);
+document.getElementById("finalReportDownloadWrap").appendChild(
+  makeDownloadButton("저장 (다운로드, .docx)", () => document.getElementById("finalReportText").textContent, "수사결과보고서")
+);
+
+document.getElementById("btnAssemble").onclick = () => {
+  const decision = document.getElementById("decision").value;
+  const labels = "가나다라마바사아자차카타파하";
+  let idx = 0;
+  const fact = document.getElementById("reportFact").value;
+  let out = "5. 범죄사실 (피의자: " + suspectsSummary() + ")\n" + (fact.trim() || "(미입력)") + "\n\n";
+  out += "6. 수사결과 및 의견\n\n";
+  if (state.caseMode === "confession") {
+    out += labels[idx++] + ". 피의자의 자백\n" + (document.getElementById("confession").value || "(미입력)") + "\n\n";
+    out += labels[idx++] + ". 자백에 대한 보강증거\n" + (document.getElementById("confessionEvidence").value || "(미입력)") + "\n\n";
+  } else {
+    out += labels[idx++] + ". 다툼이 없이 인정되는 사실\n" + (document.getElementById("factsAgreed").value || "(미입력)") + "\n\n";
+    if (state.caseMode === "dispute") {
+      state.disputes.forEach((d) => {
+        out += labels[idx++] + ". " + (d.title || "(쟁점 제목 미입력)") + "\n";
+        out += "  1) 고소인의 주장\n  " + (d.complainant || "(미입력)") + "\n\n";
+        out += "  2) 피의자의 주장\n  " + (d.suspect || "(미입력)") + "\n\n";
+        out += "  3) 관련 판례\n  " + (d.precedent || "(미입력)") + "\n\n";
+        out += "  4) 검토\n  " + (d.review || "(미입력)") + "\n\n";
+      });
+    }
+  }
+  state.extraItems.filter(x => x.included).forEach(item => {
+    const content = item.content.trim() || "(이 칸이 비어있음 - 원자료에 관련 내용이 있는지 직접 확인 후, 없으면 '작성불가(이유: 정보부족)'로 기재하세요. 이 버튼은 화면 내용을 그대로 조합만 할 뿐, 원자료를 대조해서 자동 판단하지 않습니다.)";
+    out += labels[idx++] + ". " + (item.label || "(항목명 미입력)") + "\n" + content + "\n\n";
+  });
+  out += labels[idx++] + ". 결론\n" + decision + "\n";
+  document.getElementById("assembledText").textContent = out;
+  document.getElementById("assembledWrap").style.display = "block";
+};
+
+document.getElementById("btnFinalizeFromAI").onclick = () => {
+  const aiAnswer = document.getElementById("aiFullReportAnswer").value.trim();
+  if (!aiAnswer) {
+    alert("먼저 AI가 작성한 답변을 위 칸에 붙여넣어주세요.");
+    return;
+  }
+  const fact = document.getElementById("reportFact").value;
+  let out = "5. 범죄사실 (피의자: " + suspectsSummary() + ")\n" + (fact.trim() || "(미입력)") + "\n\n";
+  if (/6\s*\.\s*수사결과/.test(aiAnswer)) {
+    out += aiAnswer;
+  } else {
+    out += "6. 수사결과 및 의견\n\n" + aiAnswer;
+  }
+  document.getElementById("finalReportText").textContent = out;
+  document.getElementById("finalReportWrap").style.display = "block";
+  document.getElementById("finalReportWrap").scrollIntoView({ behavior: "smooth", block: "start" });
+};
+
+// ===================== 사건 저장 / 불러오기 =====================
+function collectAllTextFields() {
+  const ids = [
+    "complaintText","statementText","generatedFact","reportFact",
+    "confession","confessionEvidence","factsAgreed","aiFullReportAnswer",
+    "prepComplaintText","prepStatementText","prepAnswer"
+  ];
+  const fields = {};
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) fields[id] = el.value;
+  });
+  fields.decision = document.getElementById("decision").value;
+  fields.piiAutoMask = document.getElementById("piiAutoMask").checked;
+  fields.prepCrimeType = prepCrimeType;
+  return fields;
+}
+
+document.getElementById("btnSaveCase").onclick = () => {
+  const data = {
+    savedAt: new Date().toISOString(),
+    state: state,
+    fields: collectAllTextFields(),
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const stamp = new Date().toISOString().slice(0,16).replace(/[-T:]/g, "");
+  a.href = url;
+  a.download = "사건_" + state.crimeType + "_" + stamp + ".json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+document.getElementById("loadCaseInput").onchange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+
+    state.crimeType = data.state.crimeType || state.crimeType;
+    state.caseMode = data.state.caseMode || state.caseMode;
+    state.disputes = data.state.disputes || [];
+    state.extraItems = data.state.extraItems || [];
+    state.miscItems = data.state.miscItems || [];
+    state.precedents = data.state.precedents || [];
+    state.nameMap = data.state.nameMap || [];
+    state.suspects = (data.state.suspects && data.state.suspects.length) ? data.state.suspects : state.suspects;
+    state.complaintItems = (data.state.complaintItems && data.state.complaintItems.length) ? data.state.complaintItems : (data.fields && data.fields.srcComplaint ? [{id:"c_"+Date.now(), label:"1차", content: data.fields.srcComplaint}] : state.complaintItems);
+    state.victimStatementItems = (data.state.victimStatementItems && data.state.victimStatementItems.length) ? data.state.victimStatementItems : (data.fields && data.fields.srcVictimStatement ? [{id:"v_"+Date.now(), label:"1차", content: data.fields.srcVictimStatement}] : state.victimStatementItems);
+    state.suspectStatementItems = (data.state.suspectStatementItems && data.state.suspectStatementItems.length) ? data.state.suspectStatementItems : (data.fields && data.fields.srcSuspectStatement ? [{id:"s_"+Date.now(), suspectId: state.suspects[0].id, label:"1회", content: data.fields.srcSuspectStatement}] : state.suspectStatementItems);
+
+    Object.keys(data.fields || {}).forEach(id => {
+      const el = document.getElementById(id);
+      if (el && id !== "decision" && id !== "piiAutoMask") el.value = data.fields[id];
+    });
+    if (data.fields.decision) document.getElementById("decision").value = data.fields.decision;
+    if (typeof data.fields.piiAutoMask === "boolean") document.getElementById("piiAutoMask").checked = data.fields.piiAutoMask;
+
+    document.querySelectorAll("#crime-pills .pill").forEach(p => p.classList.remove("active"));
+    document.querySelectorAll('#crime-pills .pill[data-crime-id="' + state.crimeType + '"]').forEach(p => p.classList.add("active"));
+    document.querySelectorAll(".mode-btn").forEach(b => b.classList.toggle("active", b.dataset.mode === state.caseMode));
+    updateCaseModeUI();
+
+    if (data.fields && data.fields.prepCrimeType) {
+      prepCrimeType = data.fields.prepCrimeType;
+    }
+    renderPrepCrimePills();
+
+    renderSuspects();
+    renderComplaintItems();
+    renderVictimStatementItems();
+    renderSuspectStatementItems();
+    renderMiscItems();
+    renderPrecedents();
+    renderExtraItems();
+    renderNamePairs();
+    document.getElementById("disputeCards").innerHTML = "";
+    state.disputes.forEach(d => renderDisputeCard(d));
+
+    alert("사건을 불러왔습니다.");
+  } catch (err) {
+    alert("파일을 불러오는 중 오류가 발생했습니다. 올바른 저장 파일인지 확인해주세요.");
+  } finally {
+    e.target.value = "";
+  }
+};
+
+// ===================== 탭3: 피의자신문조서 준비 (완전 독립, 2번 탭 데이터 미사용) =====================
+let prepCrimeType = "사기";
+function renderPrepCrimePills() {
+  const container = document.getElementById("crime-pills-prep");
+  container.innerHTML = "";
+  CRIME_TYPES.forEach(c => {
+    const b = document.createElement("button");
+    b.className = "pill" + (c.id === prepCrimeType ? " active" : "");
+    b.textContent = c.label;
+    b.onclick = () => {
+      prepCrimeType = c.id;
+      document.querySelectorAll("#crime-pills-prep .pill").forEach(p => p.classList.remove("active"));
+      b.classList.add("active");
+      refreshPrepPrompt();
+    };
+    container.appendChild(b);
+  });
+}
+renderPrepCrimePills();
+attachMultiFileOCR("prepComplaintText", "replace");
+attachMultiFileOCR("prepStatementText", "append");
+
+function buildInterrogationPrepPrompt() {
+  const complaintText = maskPII(document.getElementById("prepComplaintText").value);
+  const statementText = maskPII(document.getElementById("prepStatementText").value);
+  const guide = PATTERN_GUIDE[prepCrimeType] || "";
+
+  return "너는 대한민국 경찰 수사관의 피의자신문 준비를 돕는 어시스턴트야. 아래 자료를 바탕으로, '" + prepCrimeType + "' 혐의 피의자를 조사하기 전에 준비해야 할 사항을 정리해줘.\n\n" +
+"[이 죄종의 구성요건 구조 - 참고]\n" + guide + "\n\n" +
+"[출력 형식 - 반드시 이 3항목으로 구성]\n" +
+"1. 필수질문\n" +
+"   - 이 죄종의 구성요건(예: 기망행위, 편취범의, 임무위배, 보관관계 등)을 하나하나 확인할 수 있는 질문을 문답형으로 제시할 것 (예: \"문: ~에 대해 어떻게 생각하십니까?\")\n" +
+"   - 고소장과 진술조서 사이에 서로 다르거나 애매한 부분이 있으면, 그 지점을 짚어서 확인하는 질문도 포함할 것\n" +
+"   - 진술거부권 등 절차적 고지사항은 생략(이미 별도 진행 전제)하고, 실질 조사 질문 위주로 작성할 것\n\n" +
+"2. 받아야 할 자료\n" +
+"   - 이 사건 진행을 위해 추가로 확보해야 할 구체적 자료를 나열할 것 (예: 계좌 압수수색, 통신사실확인자료, CCTV, 디지털포렌식 대상, 관련자 참고인 조사 등)\n" +
+"   - 이미 고소장·진술조서에서 언급된 자료와, 아직 확보되지 않아 추가로 받아야 할 자료를 구분해서 표시할 것\n\n" +
+"3. 조사 전 미리 알아야 할 정보\n" +
+"   - 사건의 핵심 일시·금액·행위를 간단히 정리\n" +
+"   - 고소인 진술 내부에서도 애매하거나 추가 확인이 필요한 지점이 있다면 미리 정리\n" +
+"   - 피의자가 부인할 경우 예상되는 항변과, 그에 대한 반박 논리나 참고할 만한 법리 방향(판례를 확정적으로 인용하지 말고, 어떤 키워드로 검색해보면 좋을지 제안하는 정도로)\n\n" +
+"[고소장/진정서/고발장]\n" + (complaintText || "(없음)") + "\n\n" +
+"[진술서/진술조서]\n" + (statementText || "(없음)") + "\n\n" +
+"위 자료로 피의자신문 준비사항을 1, 2, 3 항목으로 작성해줘.";
+}
+
+function refreshPrepPrompt() {
+  const wrap = document.getElementById("promptPrepWrap");
+  wrap.innerHTML = "";
+  wrap.appendChild(makePromptExport("AI에게 피의자신문조서 준비사항 물어보기", buildInterrogationPrepPrompt));
+}
+refreshPrepPrompt();
+
+document.getElementById("prepDownloadWrap").appendChild(
+  makeDownloadButton("저장 (다운로드, .docx)", () => {
+    const body = document.getElementById("prepAnswer").value;
+    return "피의자신문조서 준비 — " + prepCrimeType + "\n\n" + body;
+  }, "피의자신문조서_준비")
+);
+
+// ===================== 초기 렌더 =====================
+renderSuspects();
+renderComplaintItems();
+renderVictimStatementItems();
+renderSuspectStatementItems();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</body>
+</html>
