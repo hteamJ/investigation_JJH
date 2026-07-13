@@ -263,15 +263,17 @@
   <div class="eyebrow">PROTOTYPE · 범죄사실 및 수사결과보고서 프롬프트 생성기</div>
   <h1>수사서류 작성 지원 도구</h1>
   <div class="sub">이 도구는 API를 호출하지 않습니다. 자료를 넣고 프롬프트를 복사해서, 원하는 AI(Gemini, ChatGPT, Claude.ai 등)에 붙여넣어 결과를 받는 방식입니다.</div>
-  <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+  <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; align-items:center;">
     <a href="https://claude.ai/new" target="_blank" rel="noopener noreferrer" class="btn ghost" style="text-decoration:none; display:inline-block;">Claude에게 물어보러 가기 ↗</a>
     <a href="https://gemini.google.com/app" target="_blank" rel="noopener noreferrer" class="btn ghost" style="text-decoration:none; display:inline-block;">Gemini에게 물어보러 가기 ↗</a>
     <button class="btn ghost" id="btnSaveCase">사건 저장 (파일로 저장)</button>
     <label class="btn ghost" style="cursor:pointer; margin:0;">사건 불러오기
       <input type="file" id="loadCaseInput" accept=".json" style="display:none;" />
     </label>
+    <button class="btn ghost" id="btnResetAll" style="border-color:#E24B4A; color:#7A2E2E;">전체 초기화</button>
+    <span id="autosaveStatus" class="hint" style="margin:0;"></span>
   </div>
-  <div class="hint" style="margin-top:8px; margin-bottom:0;">먼저 "프롬프트 복사" 버튼으로 복사한 다음, 이 버튼을 눌러 새 탭에서 붙여넣기(Ctrl+V) 하시면 됩니다. 작업 중인 사건은 "사건 저장"으로 내려받아두면 나중에 "사건 불러오기"로 이어서 작업할 수 있어요.</div>
+  <div class="hint" style="margin-top:8px; margin-bottom:0;">먼저 "프롬프트 복사" 버튼으로 복사한 다음, 이 버튼을 눌러 새 탭에서 붙여넣기(Ctrl+V) 하시면 됩니다. 작업 중인 사건은 "사건 저장"으로 내려받아두면 나중에 "사건 불러오기"로 이어서 작업할 수 있어요. 입력하시는 동안 브라우저에 자동으로 임시저장도 되니, 실수로 새로고침해도 다시 열면 물어봐요.</div>
 </header>
 
 <div class="tabs">
@@ -389,12 +391,23 @@
       </div>
     </div>
 
+    <div id="precedentSection">
+      <div class="label">판례 추가 (쟁점을 찾기 전에 먼저 등록해두면, 아래 "쟁점 찾기" 단계에서 AI가 이 판례들을 참고해서 관련판례 칸까지 같이 채워줘요)</div>
+      <div class="hint" style="margin-top:0;">슈퍼로이어 등에서 찾은 판례를 판례번호+내용 형태로 붙여넣으세요.</div>
+      <div class="warn-box">
+        ⚠ <strong>AI가 제시하는 판례번호는 실제로 존재하는 다른 사건 번호를 갖다 붙이거나, 번호 자체를 지어내는 경우가 있어요.</strong> AI 답변에 나온 판례는 그대로 쓰지 마시고, 반드시 <a href="https://casenote.kr" target="_blank" rel="noopener noreferrer">casenote.kr</a>, <a href="https://www.law.go.kr" target="_blank" rel="noopener noreferrer">국가법령정보센터</a>, 종합법률정보 등에서 판례번호와 실제 판시내용이 일치하는지 직접 검색해서 확인한 뒤 판례 자료함에 등록해주세요.
+      </div>
+      <div id="precedentItemsWrap" style="margin-bottom:10px;"></div>
+      <button class="btn ghost" id="btnAddPrecedentItem" style="margin-bottom:14px;">판례 추가</button>
+      <div id="promptPrecedentRelevanceWrap" style="margin-bottom:20px;"></div>
+    </div>
+
     <div id="disputesSection">
       <div class="label">나. 쟁점</div>
       <div class="hint" style="margin-top:0;">아래 프롬프트로 AI에게 쟁점을 물어본 뒤, 답변 전체를 아래 칸에 붙여넣고 "자동으로 쟁점 카드 나누기"를 누르면 AI가 만든 형식(나./다./1)2)3)4))에 맞춰 카드가 자동으로 만들어져요. 형식이 안 맞으면 "쟁점 추가"로 직접 만드세요.</div>
       <div id="promptDisputeWrap" style="margin-bottom:10px;"></div>
       <div class="field-block">
-        <textarea id="disputeRawAnswer" rows="8" placeholder="AI가 준 쟁점 답변 전체를 여기에 통째로 붙여넣으세요 (나. 쟁점제목 / 1) 고소인의 주장 / 2) 피의자의 주장 / 3) 관련 판례 / 4) 검토 형식)"></textarea>
+        <textarea id="disputeRawAnswer" rows="8" placeholder="AI가 준 쟁점 답변 전체를 여기에 통째로 붙여넣으세요 (나. 쟁점제목 / 1) 고소인의 주장 / 2) 피의자(들)의 주장 / 3) 관련 판례 / 4) 검토 형식)"></textarea>
       </div>
       <div style="margin-bottom:20px; display:flex; gap:8px;">
         <button class="btn" id="btnParseDisputes">자동으로 쟁점 카드 나누기</button>
@@ -402,17 +415,6 @@
       </div>
 
       <div id="disputeCards"></div>
-    </div>
-
-    <div id="precedentSection">
-      <div class="label">판례 추가 (쟁점을 먼저 정한 뒤, 각 쟁점에 맞는 판례를 찾아 여기 등록하세요)</div>
-      <div class="hint" style="margin-top:0;">슈퍼로이어 등에서 찾은 판례를 판례번호+내용 형태로 붙여넣으세요. 등록 후 위 쟁점 카드의 "3) 관련 판례" 칸에 옮겨 적거나, 아래 "판례 관련성 확인"으로 대조해보세요.</div>
-      <div class="warn-box">
-        ⚠ <strong>AI가 제시하는 판례번호는 실제로 존재하는 다른 사건 번호를 갖다 붙이거나, 번호 자체를 지어내는 경우가 있어요.</strong> AI 답변에 나온 판례는 그대로 쓰지 마시고, 반드시 <a href="https://casenote.kr" target="_blank" rel="noopener noreferrer">casenote.kr</a>, <a href="https://www.law.go.kr" target="_blank" rel="noopener noreferrer">국가법령정보센터</a>, 종합법률정보 등에서 판례번호와 실제 판시내용이 일치하는지 직접 검색해서 확인한 뒤 판례 자료함에 등록해주세요.
-      </div>
-      <div id="precedentItemsWrap" style="margin-bottom:10px;"></div>
-      <button class="btn ghost" id="btnAddPrecedentItem" style="margin-bottom:14px;">판례 추가</button>
-      <div id="promptPrecedentRelevanceWrap" style="margin-bottom:20px;"></div>
     </div>
 
     <div class="label">결정</div>
@@ -613,6 +615,8 @@ const CRIME_TYPES = [
   { id: "명예훼손(사실적시)", label: "명예훼손(사실적시)" },
   { id: "명예훼손(허위사실적시)", label: "명예훼손(허위사실적시)" },
   { id: "정통망법명예훼손", label: "정통망법 명예훼손" },
+  { id: "사문서위조", label: "사문서위조" },
+  { id: "위조사문서행사", label: "위조사문서행사" },
 ];
 
 const PATTERN_GUIDE = {
@@ -626,6 +630,8 @@ const PATTERN_GUIDE = {
   "명예훼손(사실적시)": "구조: [관계/지위 서두] → [일시·장소·인원] → [적시한 구체적 사실] → [결어: 공연히 사실을 적시하여 명예를 훼손하였다].",
   "명예훼손(허위사실적시)": "구조: 사실적시와 동일하나 [이는 사실과 다른 것이었다]는 문구 필수 → [결어: 공연히 허위의 사실을 적시하여 명예를 훼손하였다].",
   "정통망법명예훼손": "구조: [매체+열람 가능 인원] → [게시 내용] → [사실/허위 여부] → [결어: 비방할 목적으로 정보통신망을 통하여 공공연하게 (허위의) 사실을 드러내어 명예를 훼손하였다].",
+  "사문서위조": "구조: [행사할 목적이 있었다는 서두] → [위조 대상 문서의 종류·명의자] → [위조 행위: 언제 어디서 어떤 방법으로(예: 명의자 도장을 임의로 날인, 서명을 임의로 기재 등) 문서를 작성하였는지 구체적으로] → [결어: 이로써 피의자는 행사할 목적으로 사문서인 OOO 명의의 △△를 위조하였다]. 위조란 작성권한 없는 자가 타인 명의를 임의로 사용해 문서를 작성하는 것이므로, 명의자 본인의 동의·위임이 없었다는 점을 반드시 명시할 것.",
+  "위조사문서행사": "구조: [위조된 문서라는 인식이 있었다는 전제] → [행사 행위: 언제 어디서 누구에게 그 위조 문서를 제시·제출·교부하였는지] → [그 행사로 인한 결과(있다면)] → [결어: 이로써 피의자는 위와 같이 위조된 사문서를 행사하였다]. 통상 사문서위조와 함께 기재되며(위조 후 그 문서를 실제로 사용한 행위), 위조 시점과 행사 시점이 다르면 각각 구분해서 명시할 것.",
 };
 
 const DECISIONS_LIST = ["송치(구속)","송치(불구속)","불송치(혐의없음-증거불충분)","불송치(죄가안됨)","불송치(공소권없음)","각하"];
@@ -666,15 +672,71 @@ let state = {
 };
 
 // ===================== 개인정보 마스킹 =====================
+// ===================== 개인정보 마스킹 (복원 가능한 토큰 방식) =====================
+// 계좌/전화/주민번호 등을 그냥 *로 가리면 나중에 원래 값을 되살릴 수 없으므로,
+// [계좌01]처럼 고유 표시로 바꾸고 원래 값을 piiMaskMap에 저장해뒀다가
+// AI 답변을 받은 뒤 "개인정보 복원" 버튼으로 다시 채워넣을 수 있게 함.
+let piiMaskMap = []; // [{ token, original }]
+
+function getOrCreateToken(original, label) {
+  const existing = piiMaskMap.find(m => m.original === original);
+  if (existing) return existing.token;
+  const countSameLabel = piiMaskMap.filter(m => m.token.startsWith("[" + label)).length;
+  const token = "[" + label + String(countSameLabel + 1).padStart(2, "0") + "]";
+  piiMaskMap.push({ token, original });
+  return token;
+}
+
+// 고소장/진술조서 특유의 "고소인: 홍길동", "피고소인: 1. 김철수" 같은 서두 표기를 찾아서
+// 그 이름이 본문 어디에 나오든 전부 토큰으로 바꿔줌 (별도 목록 등록 없이 자동으로)
+function autoMaskNames(text) {
+  if (!text) return text;
+  let out = text;
+  const foundNames = new Set();
+
+  // 한 줄에 한 명만 나오는 역할 (고소인/진정인/고발인/진술자)
+  const singleRolePatterns = [
+    /고소인\s*[:：]\s*([가-힣]{2,5})/g,
+    /진정인\s*[:：]\s*([가-힣]{2,5})/g,
+    /고발인\s*[:：]\s*([가-힣]{2,5})/g,
+    /진술자\s*[:：]\s*([가-힣]{2,5})/g,
+  ];
+  singleRolePatterns.forEach(re => {
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      if (m[1] && m[1].length >= 2) foundNames.add(m[1]);
+    }
+  });
+
+  // 한 줄에 여러 명이 "1. 이름, 2. 이름"처럼 나열될 수 있는 역할 (피고소인/피진정인/피고발인/피의자)
+  const multiRoleRe = /(?:피고소인|피진정인|피고발인|피의자)\s*[:：]\s*([^\n]+)/g;
+  let mm;
+  while ((mm = multiRoleRe.exec(text)) !== null) {
+    const segment = mm[1];
+    const nameInListRe = /(?:^|[,，、]|\d+\.)\s*([가-힣]{2,5})/g;
+    let nm;
+    while ((nm = nameInListRe.exec(segment)) !== null) {
+      if (nm[1] && nm[1].length >= 2) foundNames.add(nm[1]);
+    }
+  }
+
+  foundNames.forEach(name => {
+    const token = getOrCreateToken(name, "성명");
+    out = out.split(name).join(token);
+  });
+  return out;
+}
+
 function maskPII(text) {
   if (!text) return text;
   let out = text;
   if (document.getElementById("piiAutoMask").checked) {
-    out = out.replace(/\d{6}\s?-\s?\d{7}/g, "######-#######");
-    out = out.replace(/01[0-9]\s?-?\s?\d{3,4}\s?-?\s?\d{4}/g, "010-****-****");
-    out = out.replace(/\d{2,6}-\d{2,6}-\d{4,8}/g, m => m.replace(/\d/g, "*"));
-    out = out.replace(/\b\d{10,16}\b/g, m => "*".repeat(m.length));
-    out = out.replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g, "****@****.***");
+    out = out.replace(/\d{6}\s?-\s?\d{7}/g, m => getOrCreateToken(m, "주민번호"));
+    out = out.replace(/01[0-9]\s?-?\s?\d{3,4}\s?-?\s?\d{4}/g, m => getOrCreateToken(m, "전화번호"));
+    out = out.replace(/\d{2,6}-\d{2,6}-\d{4,8}/g, m => getOrCreateToken(m, "계좌번호"));
+    out = out.replace(/\b\d{10,16}\b/g, m => getOrCreateToken(m, "번호"));
+    out = out.replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g, m => getOrCreateToken(m, "이메일"));
+    out = autoMaskNames(out);
   }
   state.nameMap.forEach(pair => {
     if (pair.name && pair.replacement) {
@@ -682,6 +744,39 @@ function maskPII(text) {
     }
   });
   return out;
+}
+
+// AI 답변에 남아있는 [계좌01] 같은 표시와, 실명 대체어를 원래 값으로 되돌림
+function restorePII(text) {
+  if (!text) return text;
+  let out = text;
+  piiMaskMap.forEach(({ token, original }) => {
+    out = out.split(token).join(original);
+  });
+  state.nameMap.forEach(pair => {
+    if (pair.name && pair.replacement) {
+      out = out.split(pair.replacement).join(pair.name);
+    }
+  });
+  return out;
+}
+
+function attachRestoreButton(textareaId) {
+  const ta = document.getElementById(textareaId);
+  if (!ta) return;
+  const btn = document.createElement("button");
+  btn.className = "btn ghost";
+  btn.style.marginTop = "8px";
+  btn.style.marginBottom = "6px";
+  btn.textContent = "개인정보 복원 ([계좌01] 등을 실제 값으로 되돌리기)";
+  btn.onclick = () => {
+    if (piiMaskMap.length === 0 && state.nameMap.every(p => !p.name)) {
+      alert("복원할 마스킹 기록이 없어요. 이 사건에서 마스킹된 프롬프트를 만든 적이 없거나, 이미 복원된 상태일 수 있어요.");
+      return;
+    }
+    ta.value = restorePII(ta.value);
+  };
+  ta.insertAdjacentElement("afterend", btn);
 }
 
 function addNamePair() {
@@ -958,8 +1053,8 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
 
 // ===================== 범죄사실 프롬프트 =====================
 function buildFactPrompt() {
-  const complaintText = document.getElementById("complaintText").value;
-  const statementText = document.getElementById("statementText").value;
+  const complaintText = maskPII(document.getElementById("complaintText").value);
+  const statementText = maskPII(document.getElementById("statementText").value);
   return "너는 대한민국 경찰 수사서류 작성을 돕는 어시스턴트야. 아래 자료를 바탕으로 '" + state.crimeType + "' 범죄사실을 공문서체(\"~하였다\")로, 아래 세 가지 버전으로 각각 작성해줘.\n\n" +
 "[문형 지침 - 세 버전 공통]\n" + PATTERN_GUIDE[state.crimeType] + "\n\n" +
 "[공통 작성 규칙]\n" +
@@ -1041,8 +1136,12 @@ function addSuspect() {
 }
 document.getElementById("btnAddSuspect").onclick = addSuspect;
 
-function suspectsSummary() {
-  return state.suspects.map(s => (s.name || "성명불상") + "(" + s.crimeType + ")").join(", ");
+function suspectsSummary(masked) {
+  return state.suspects.map(s => {
+    const name = s.name || "성명불상";
+    const displayName = (masked && document.getElementById("piiAutoMask").checked) ? getOrCreateToken(name, "성명") : name;
+    return displayName + "(" + s.crimeType + ")";
+  }).join(", ");
 }
 
 // ===================== 반복 가능한 자료 목록 공통 렌더러 =====================
@@ -1165,7 +1264,7 @@ function getReportSources() {
     precedents: precedentText,
     generatedFact: maskPII(document.getElementById("reportFact").value),
     factsAgreed: maskPII(document.getElementById("factsAgreed").value),
-    suspectsSummary: suspectsSummary(),
+    suspectsSummary: suspectsSummary(true),
   };
 }
 
@@ -1333,7 +1432,7 @@ function buildDisputeFindPrompt() {
 "- 쟁점별로 아래 형식을 갖춰서 답해줘:\n" +
 "  나. [쟁점 제목]\n" +
 "    1) 고소인의 주장\n" +
-"    2) 피의자의 주장\n" +
+"    2) 피의자(들)의 주장 — 피의자가 여러 명인 사건이면, 이 쟁점과 실제로 관련 있는 피의자만 이름을 명시해서 쓸 것. 두 명 다 이 쟁점에 관련되면 각자 이름을 밝혀 구분해서 쓰고('피의자 OOO는 ~라고 주장하고, 피의자 ㅁㅁㅁ는 ~라고 주장한다'), 한 명만 관련 있으면 그 사람 이름만 쓸 것. 이 쟁점과 무관한 피의자는 언급하지 말 것\n" +
 "    3) 관련 판례 (아래 판례 자료함에 있는 것 중 관련 있는 것만, 없으면 비워둘 것)\n" +
 "    4) 검토 (판례를 그대로 베끼지 말고 본 사건 사실관계에 적용하는 방식으로)\n\n" +
 "[피의자 목록]\n" + s.suspectsSummary + "\n\n" +
@@ -1476,7 +1575,7 @@ function renderDisputeCard(d) {
   }
 
   twoCol.appendChild(fieldBlock("1) 고소인 주장", "complainant", 4));
-  twoCol.appendChild(fieldBlock("2) 피의자 주장", "suspect", 4));
+  twoCol.appendChild(fieldBlock("2) 피의자(들) 주장 (관련된 사람만, 이름 명시)", "suspect", 4));
 
   const precedentBlock = fieldBlock("3) 관련 판례 (위 판례 자료함에서 옮겨 적기)", "precedent", 3);
   const reviewBlock = fieldBlock("4) 검토", "review", 4);
@@ -1626,7 +1725,10 @@ function collectAllTextFields() {
   const ids = [
     "complaintText","statementText","generatedFact","reportFact",
     "confession","confessionEvidence","factsAgreed","aiFullReportAnswer",
-    "prepComplaintText","prepStatementText","prepAnswer"
+    "prepComplaintText","prepStatementText","prepAnswer",
+    "multiSuspectComplaintText","multiSuspectStatementText","multiSuspectAnswer",
+    "multiCrimeComplaintText2","multiCrimeStatementText2","multiCrimeAnswer2",
+    "crimeListComplaintText","crimeListStatementText","crimeListAnswer"
   ];
   const fields = {};
   ids.forEach(id => {
@@ -1636,15 +1738,25 @@ function collectAllTextFields() {
   fields.decision = document.getElementById("decision").value;
   fields.piiAutoMask = document.getElementById("piiAutoMask").checked;
   fields.prepCrimeType = prepCrimeType;
+  fields.multiSuspectNames = multiSuspectNames;
+  fields.multiCrimeSelected2 = multiCrimeSelected2;
+  fields.crimeListAccountMode = crimeListAccountMode;
+  fields.piiMaskMap = piiMaskMap;
   return fields;
 }
 
-document.getElementById("btnSaveCase").onclick = () => {
-  const data = {
+const AUTOSAVE_KEY = "investigation_tool_autosave_v1";
+
+function buildSaveData() {
+  return {
     savedAt: new Date().toISOString(),
     state: state,
     fields: collectAllTextFields(),
   };
+}
+
+document.getElementById("btnSaveCase").onclick = () => {
+  const data = buildSaveData();
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -1657,59 +1769,103 @@ document.getElementById("btnSaveCase").onclick = () => {
   URL.revokeObjectURL(url);
 };
 
+function applyLoadedData(data) {
+  if (data.fields && data.fields.piiMaskMap) {
+    piiMaskMap = data.fields.piiMaskMap;
+  }
+  state.crimeType = data.state.crimeType || state.crimeType;
+  state.caseMode = data.state.caseMode || state.caseMode;
+  state.disputes = data.state.disputes || [];
+  state.extraItems = data.state.extraItems || [];
+  state.miscItems = data.state.miscItems || [];
+  state.precedents = data.state.precedents || [];
+  state.nameMap = data.state.nameMap || [];
+  state.suspects = (data.state.suspects && data.state.suspects.length) ? data.state.suspects : state.suspects;
+  state.complaintItems = (data.state.complaintItems && data.state.complaintItems.length) ? data.state.complaintItems : (data.fields && data.fields.srcComplaint ? [{id:"c_"+Date.now(), label:"1차", content: data.fields.srcComplaint}] : state.complaintItems);
+  state.victimStatementItems = (data.state.victimStatementItems && data.state.victimStatementItems.length) ? data.state.victimStatementItems : (data.fields && data.fields.srcVictimStatement ? [{id:"v_"+Date.now(), label:"1차", content: data.fields.srcVictimStatement}] : state.victimStatementItems);
+  state.suspectStatementItems = (data.state.suspectStatementItems && data.state.suspectStatementItems.length) ? data.state.suspectStatementItems : (data.fields && data.fields.srcSuspectStatement ? [{id:"s_"+Date.now(), suspectId: state.suspects[0].id, label:"1회", content: data.fields.srcSuspectStatement}] : state.suspectStatementItems);
+
+  Object.keys(data.fields || {}).forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.tagName && (el.tagName === "TEXTAREA" || el.tagName === "INPUT") && typeof data.fields[id] === "string") el.value = data.fields[id];
+  });
+  if (data.fields.decision) document.getElementById("decision").value = data.fields.decision;
+  if (typeof data.fields.piiAutoMask === "boolean") document.getElementById("piiAutoMask").checked = data.fields.piiAutoMask;
+
+  document.querySelectorAll("#crime-pills .pill").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll('#crime-pills .pill[data-crime-id="' + state.crimeType + '"]').forEach(p => p.classList.add("active"));
+  document.querySelectorAll(".mode-btn").forEach(b => b.classList.toggle("active", b.dataset.mode === state.caseMode));
+  updateCaseModeUI();
+
+  if (data.fields && data.fields.prepCrimeType) {
+    prepCrimeType = data.fields.prepCrimeType;
+  }
+  renderPrepCrimePills();
+
+  if (data.fields && data.fields.multiSuspectNames && data.fields.multiSuspectNames.length) {
+    multiSuspectNames = data.fields.multiSuspectNames;
+  }
+  renderMultiSuspectNames();
+
+  if (data.fields && data.fields.multiCrimeSelected2) {
+    multiCrimeSelected2 = data.fields.multiCrimeSelected2;
+  }
+  renderCrimeChecklist("crime-checklist-multicrime", multiCrimeSelected2);
+
+  if (data.fields && data.fields.crimeListAccountMode) {
+    crimeListAccountMode = data.fields.crimeListAccountMode;
+    document.querySelectorAll("#panel-crimelist .acct-btn").forEach(b => {
+      b.classList.toggle("active", b.dataset.accountmode === crimeListAccountMode);
+    });
+  }
+
+  renderSuspects();
+  renderComplaintItems();
+  renderVictimStatementItems();
+  renderSuspectStatementItems();
+  renderMiscItems();
+  renderPrecedents();
+  renderExtraItems();
+  renderNamePairs();
+  document.getElementById("disputeCards").innerHTML = "";
+  state.disputes.forEach(d => renderDisputeCard(d));
+}
+
 document.getElementById("loadCaseInput").onchange = async (e) => {
   const file = e.target.files[0];
   if (!file) return;
   try {
     const text = await file.text();
     const data = JSON.parse(text);
-
-    state.crimeType = data.state.crimeType || state.crimeType;
-    state.caseMode = data.state.caseMode || state.caseMode;
-    state.disputes = data.state.disputes || [];
-    state.extraItems = data.state.extraItems || [];
-    state.miscItems = data.state.miscItems || [];
-    state.precedents = data.state.precedents || [];
-    state.nameMap = data.state.nameMap || [];
-    state.suspects = (data.state.suspects && data.state.suspects.length) ? data.state.suspects : state.suspects;
-    state.complaintItems = (data.state.complaintItems && data.state.complaintItems.length) ? data.state.complaintItems : (data.fields && data.fields.srcComplaint ? [{id:"c_"+Date.now(), label:"1차", content: data.fields.srcComplaint}] : state.complaintItems);
-    state.victimStatementItems = (data.state.victimStatementItems && data.state.victimStatementItems.length) ? data.state.victimStatementItems : (data.fields && data.fields.srcVictimStatement ? [{id:"v_"+Date.now(), label:"1차", content: data.fields.srcVictimStatement}] : state.victimStatementItems);
-    state.suspectStatementItems = (data.state.suspectStatementItems && data.state.suspectStatementItems.length) ? data.state.suspectStatementItems : (data.fields && data.fields.srcSuspectStatement ? [{id:"s_"+Date.now(), suspectId: state.suspects[0].id, label:"1회", content: data.fields.srcSuspectStatement}] : state.suspectStatementItems);
-
-    Object.keys(data.fields || {}).forEach(id => {
-      const el = document.getElementById(id);
-      if (el && id !== "decision" && id !== "piiAutoMask") el.value = data.fields[id];
-    });
-    if (data.fields.decision) document.getElementById("decision").value = data.fields.decision;
-    if (typeof data.fields.piiAutoMask === "boolean") document.getElementById("piiAutoMask").checked = data.fields.piiAutoMask;
-
-    document.querySelectorAll("#crime-pills .pill").forEach(p => p.classList.remove("active"));
-    document.querySelectorAll('#crime-pills .pill[data-crime-id="' + state.crimeType + '"]').forEach(p => p.classList.add("active"));
-    document.querySelectorAll(".mode-btn").forEach(b => b.classList.toggle("active", b.dataset.mode === state.caseMode));
-    updateCaseModeUI();
-
-    if (data.fields && data.fields.prepCrimeType) {
-      prepCrimeType = data.fields.prepCrimeType;
-    }
-    renderPrepCrimePills();
-
-    renderSuspects();
-    renderComplaintItems();
-    renderVictimStatementItems();
-    renderSuspectStatementItems();
-    renderMiscItems();
-    renderPrecedents();
-    renderExtraItems();
-    renderNamePairs();
-    document.getElementById("disputeCards").innerHTML = "";
-    state.disputes.forEach(d => renderDisputeCard(d));
-
+    applyLoadedData(data);
     alert("사건을 불러왔습니다.");
   } catch (err) {
     alert("파일을 불러오는 중 오류가 발생했습니다. 올바른 저장 파일인지 확인해주세요.");
   } finally {
     e.target.value = "";
   }
+};
+
+// ===================== 임시저장 (브라우저 localStorage, 자동) =====================
+function autoSaveNow() {
+  try {
+    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(buildSaveData()));
+    const el = document.getElementById("autosaveStatus");
+    if (el) el.textContent = "임시저장됨 " + new Date().toLocaleTimeString();
+  } catch (e) { /* 저장공간 부족 등은 조용히 무시 */ }
+}
+let autoSaveTimer = null;
+document.addEventListener("input", () => {
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(autoSaveNow, 2000);
+});
+setInterval(autoSaveNow, 30000);
+
+// ===================== 전체 초기화 =====================
+document.getElementById("btnResetAll").onclick = () => {
+  if (!confirm("모든 탭의 내용을 전부 지우고 처음 상태로 되돌립니다. 저장하지 않은 내용은 사라져요. 계속할까요?")) return;
+  try { localStorage.removeItem(AUTOSAVE_KEY); } catch (e) {}
+  location.reload();
 };
 
 // ===================== 탭3: 피의자신문조서 준비 (완전 독립, 2번 탭 데이터 미사용) =====================
@@ -1792,7 +1948,26 @@ function renderMultiSuspectNames() {
     input.type = "text";
     input.placeholder = "피의자 " + (idx + 1) + " 이름 (예: 홍길동 또는 A)";
     input.value = item.name;
-    input.oninput = () => item.name = input.value;
+
+    const nameWarn = document.createElement("div");
+    nameWarn.className = "hint";
+    nameWarn.style.color = "#7A2E2E";
+    nameWarn.style.marginTop = "2px";
+
+    function checkNameMatch() {
+      const name = input.value.trim();
+      if (!name) { nameWarn.textContent = ""; return; }
+      const complaint = document.getElementById("multiSuspectComplaintText").value;
+      const statement = document.getElementById("multiSuspectStatementText").value;
+      if ((complaint + statement).includes(name)) {
+        nameWarn.textContent = "";
+      } else {
+        nameWarn.textContent = "⚠ 이 이름이 아래 고소장·진술조서 원자료에서 안 보여요. 오탈자나 띄어쓰기 차이가 없는지 확인해주세요.";
+      }
+    }
+    input.oninput = () => { item.name = input.value; checkNameMatch(); };
+    checkNameMatch();
+
     const delBtn = document.createElement("button");
     delBtn.className = "btn ghost";
     delBtn.textContent = "삭제";
@@ -1803,6 +1978,7 @@ function renderMultiSuspectNames() {
     };
     row.appendChild(input);
     row.appendChild(delBtn);
+    card.insertBefore(nameWarn, card.firstChild);
 
     const crimeLabel = document.createElement("div");
     crimeLabel.className = "hint";
@@ -1833,10 +2009,12 @@ document.getElementById("btnAddMultiSuspectName").onclick = () => {
   multiSuspectNames.push({ id: "msn_" + Date.now() + Math.random(), name: "", crimes: {} });
   renderMultiSuspectNames();
 };
+document.getElementById("multiSuspectComplaintText").addEventListener("input", () => renderMultiSuspectNames());
+document.getElementById("multiSuspectStatementText").addEventListener("input", () => renderMultiSuspectNames());
 
 function buildMultiSuspectFactPrompt() {
-  const complaintText = document.getElementById("multiSuspectComplaintText").value;
-  const statementText = document.getElementById("multiSuspectStatementText").value;
+  const complaintText = maskPII(document.getElementById("multiSuspectComplaintText").value);
+  const statementText = maskPII(document.getElementById("multiSuspectStatementText").value);
 
   const validSuspects = multiSuspectNames.filter(s => s.name.trim());
   if (validSuspects.length === 0) {
@@ -1851,30 +2029,39 @@ function buildMultiSuspectFactPrompt() {
   const guides = selectedCrimes.map(c => "- " + c.label + ": " + PATTERN_GUIDE[c.id]).join("\n");
   const rulesText = selectedCrimes.map(c => crimeSpecificRules(c.id)).join("\n");
 
+  // 화면에 입력한 실명을 확실히 토큰으로 치환 (자동 감지가 놓친 경우를 대비한 안전장치)
+  const nameOf = (rawName) => {
+    if (!document.getElementById("piiAutoMask").checked) return rawName;
+    return getOrCreateToken(rawName, "성명");
+  };
+
   const mappingText = selectedCrimes.map(c => {
-    const names = validSuspects.filter(s => s.crimes[c.id]).map(s => s.name.trim());
+    const names = validSuspects.filter(s => s.crimes[c.id]).map(s => nameOf(s.name.trim()));
     return c.label + ": " + names.join(", ");
   }).join("\n");
 
-  const allNames = validSuspects.map(s => s.name.trim());
+  const allNames = validSuspects.map(s => nameOf(s.name.trim()));
+  const maskedComplaintText = allNames.reduce((t, tok, i) => t.split(validSuspects[i].name.trim()).join(tok), complaintText);
+  const maskedStatementText = allNames.reduce((t, tok, i) => t.split(validSuspects[i].name.trim()).join(tok), statementText);
 
-  return "너는 대한민국 경찰 수사서류 작성을 돕는 어시스턴트야. 아래 사건에는 피의자가 총 " + allNames.length + "명(" + allNames.join(", ") + ") 등장해. 아래 [죄명별 관련 피의자 매핑]을 기준으로, 죄명별로 '가.', '나.'... 항목으로 나눠 각각 완결된 범죄사실을 공문서체(\"~하였다\")로 작성해줘.\n\n" +
+  return "너는 대한민국 경찰 수사서류 작성을 돕는 어시스턴트야. 아래 사건에는 피의자가 총 " + allNames.length + "명(" + allNames.join(", ") + ") 등장해. 아래 [죄명별 관련 피의자 매핑]을 기준으로 하되, **두 가지 버전**으로 각각 작성해줘.\n\n" +
 "[죄명별 관련 피의자 매핑 - 사용자가 직접 지정한 것이므로 그대로 따를 것]\n" + mappingText + "\n\n" +
-"[작성 규칙]\n" +
-"- 각 항목은 하나의 죄명에 대한 완결된 범죄사실이어야 하며, 위 매핑에서 그 죄명에 연결된 피의자만 다룰 것 (매핑에 없는 피의자를 그 항목에 등장시키지 말 것)\n" +
-"- 매핑은 '이 사람이 이 죄명과 관련 있다'는 것만 알려줄 뿐, 공모인지 단독인지까지 정해주는 것은 아님. 같은 죄명에 여러 명이 매핑되어 있다면, 공모관계인지 각자 독자적인 범행인지는 반드시 원자료(고소장/진술조서) 내용에 근거해서 판단할 것 — 근거 없이 임의로 공모관계를 만들어내지 말 것. 판단이 애매하면 '[공모관계 확인 필요]'라고 표시할 것\n" +
-"- 공모관계로 확인되면 그 항목은 하나로 통합해서 '피의자 OOO, ㅁㅁㅁ는 공모하여 ~하였다' 형태로 시작하고, 이어서 각자의 구체적 역할을 이름을 명시해서 서술할 것\n" +
-"- 서로 관련 없이 각자 독자적으로 저지른 범행이면, 그 항목 안에서도 이름별로 문단을 나눠 분리해서 작성할 것\n" +
-"- ⚠ 중요: 공모 여부가 불확실해서 '[공모관계 확인 필요]'로 표시하는 피의자는, 결어(마지막 '이로써 피의자~하였다' 문장)의 주어에도 포함시키지 말 것. '공모하여'라는 단어만 빼고 결어에서 '피의자들은'처럼 여러 명을 묶어 기망·편취·횡령 등의 주체로 쓰면, '공모'라는 단어만 안 썼을 뿐 결과적으로 똑같이 공모를 단정한 것과 같음. 결어에는 원자료로 확실히 확인된 주도 피의자만 주어로 쓰고, 불확실한 사람의 역할은 본문 서술에만 사실로 남겨둘 것\n" +
+"[공통 작성 규칙]\n" +
+"- 각 버전 안에서 각 항목은 하나의 죄명에 대한 것이어야 하며, 위 매핑에서 그 죄명에 연결된 피의자만 다룰 것 (매핑에 없는 피의자를 등장시키지 말 것)\n" +
 "- 매핑에 있는 피의자인데 원자료에서 전혀 언급을 찾을 수 없다면, 본문 뒤에 '[원자료에서 확인 안 됨: 이름]'이라고 표시할 것\n" +
-"- 각 피의자는 위 매핑의 이름을 그대로 사용해서 구분 표기, 피해자는 '피해자'로 통일\n" +
+"- 각 피의자는 위 매핑의 이름(또는 아래 원자료에 나오는 [성명NN] 같은 표시)을 그대로 사용해서 구분 표기, 피해자는 '피해자'로 통일\n" +
 "- 피해금액·이득액은 고소인이 진술한 금액을 그대로 사용하고(추정치라도 빈칸 처리하지 말 것), 원자료에 전혀 없는 경우만 [ ]로 비워둘 것\n" +
 "- 판례·법조문은 인용하지 말 것\n" +
 rulesText + "\n\n" +
 "[선택된 죄명별 문형 지침]\n" + guides + "\n\n" +
-"[고소장/진정서/고발장 내용]\n" + (complaintText || "(입력 없음)") + "\n\n" +
-"[진술서/진술조서 내용]\n" + (statementText || "(입력 없음)") + "\n\n" +
-"위 자료로 각 죄명별 범죄사실을 순서대로 작성해줘.";
+"[두 버전 각각의 방침 - 반드시 이 순서와 소제목으로 구분해서 출력]\n\n" +
+"■ 버전 1 (공모범죄로 가정)\n" +
+"같은 죄명에 매핑된 피의자들이 공모관계였다고 가정하고, '피의자 A, B는 공모하여 ~하였다' 형태로 하나의 범죄사실로 통합해서 작성할 것. 각자의 구체적 역할(누가 무엇을 했는지)을 이름을 명시해서 서술할 것. 원자료에 없는 공모의 세부 경위(언제 모의했는지 등)는 지어내지 말고, 확인되는 각자의 행위만 나열하는 방식으로 작성할 것.\n\n" +
+"■ 버전 2 (개별범죄로 가정 — 공모 아님)\n" +
+"매핑된 피의자들이 서로 관련 없이 각자 독자적으로 행동한 것으로 가정하고, 피의자별로 문단을 나눠 완전히 분리해서 작성할 것. ⚠ 이때 특정 피의자 본인의 행위만으로는 그 죄명의 구성요건(예: 사기의 기망행위)이 충족되지 않는다면(예: 단순히 소개·중개만 한 경우), 억지로 결어를 만들어 범죄사실을 완성시키지 말고 '피의자 OOO는 원자료상 확인되는 행위(예: 소개 행위)만으로는 이 죄명의 구성요건이 단독으로 충족되지 않을 수 있음'이라고 명시할 것.\n\n" +
+"[고소장/진정서/고발장 내용]\n" + (maskedComplaintText || "(입력 없음)") + "\n\n" +
+"[진술서/진술조서 내용]\n" + (maskedStatementText || "(입력 없음)") + "\n\n" +
+"위 자료로 버전 1, 버전 2를 순서대로 작성해줘.";
 }
 
 const promptMultiSuspectWrap = document.getElementById("promptMultiSuspectWrap");
@@ -1904,8 +2091,8 @@ let multiCrimeSelected2 = {};
 renderCrimeChecklist("crime-checklist-multicrime", multiCrimeSelected2);
 
 function buildMultiCrimeFactPrompt2() {
-  const complaintText = document.getElementById("multiCrimeComplaintText2").value;
-  const statementText = document.getElementById("multiCrimeStatementText2").value;
+  const complaintText = maskPII(document.getElementById("multiCrimeComplaintText2").value);
+  const statementText = maskPII(document.getElementById("multiCrimeStatementText2").value);
   const selectedCrimes = CRIME_TYPES.filter(c => multiCrimeSelected2[c.id]);
   if (selectedCrimes.length === 0) {
     return "먼저 위에서 해당하는 죄명을 하나 이상 체크해주세요.";
@@ -1944,8 +2131,8 @@ document.querySelectorAll("#panel-crimelist .acct-btn").forEach(btn => {
 });
 
 function buildCrimeListPrompt() {
-  const complaintText = document.getElementById("crimeListComplaintText").value;
-  const statementText = document.getElementById("crimeListStatementText").value;
+  const complaintText = maskPII(document.getElementById("crimeListComplaintText").value);
+  const statementText = maskPII(document.getElementById("crimeListStatementText").value);
   if (!complaintText.trim() && !statementText.trim()) {
     return "먼저 진정서/고소장 또는 진술조서 중 하나 이상을 넣어주세요.";
   }
@@ -2103,6 +2290,28 @@ renderSuspects();
 renderComplaintItems();
 renderVictimStatementItems();
 renderSuspectStatementItems();
+
+// 모든 "AI 답변 붙여넣기" 칸에 개인정보 복원 버튼 부착
+attachRestoreButton("generatedFact");
+attachRestoreButton("aiFullReportAnswer");
+attachRestoreButton("prepAnswer");
+attachRestoreButton("multiSuspectAnswer");
+attachRestoreButton("multiCrimeAnswer2");
+attachRestoreButton("crimeListAnswer");
+
+// 브라우저에 임시저장된 내용이 있으면 복원할지 물어봄
+try {
+  const savedRaw = localStorage.getItem(AUTOSAVE_KEY);
+  if (savedRaw) {
+    const savedData = JSON.parse(savedRaw);
+    const when = savedData.savedAt ? new Date(savedData.savedAt).toLocaleString() : "";
+    if (confirm("이전에 임시저장된 내용이 있어요 (" + when + ").\n불러올까요?\n\n[취소]를 누르면 임시저장 내용을 지우고 빈 화면으로 시작합니다.")) {
+      applyLoadedData(savedData);
+    } else {
+      localStorage.removeItem(AUTOSAVE_KEY);
+    }
+  }
+} catch (e) { /* 임시저장 복원 실패는 조용히 무시 */ }
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </body>
