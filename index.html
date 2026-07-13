@@ -1256,14 +1256,30 @@ function getReportSources() {
   }).join("\n\n");
   const miscText = state.miscItems.map(m => "[" + (m.label || "(자료명 미입력)") + "]\n" + m.content).join("\n\n") || "";
   const precedentText = state.precedents.map(p => "[" + (p.label || "(판례명/번호 미입력)") + "]\n" + p.content).join("\n\n") || "";
+
+  // 자동감지 정규식이 놓칠 수 있는 문서 형식(콜론 없는 표기 등)에 대비해,
+  // 화면에 등록된 피의자 실명은 원문 어디에 어떤 형태로 나오든 확실히 마스킹
+  function forceMaskRegisteredNames(text) {
+    if (!document.getElementById("piiAutoMask").checked) return text;
+    let out = text;
+    state.suspects.forEach(s => {
+      const name = (s.name || "").trim();
+      if (name.length >= 2) {
+        const token = getOrCreateToken(name, "성명");
+        out = out.split(name).join(token);
+      }
+    });
+    return out;
+  }
+
   return {
-    complaint: maskPII(complaintText),
-    victimStatement: maskPII(victimText),
-    suspectStatement: maskPII(suspectText),
-    misc: maskPII(miscText),
+    complaint: forceMaskRegisteredNames(maskPII(complaintText)),
+    victimStatement: forceMaskRegisteredNames(maskPII(victimText)),
+    suspectStatement: forceMaskRegisteredNames(maskPII(suspectText)),
+    misc: forceMaskRegisteredNames(maskPII(miscText)),
     precedents: precedentText,
-    generatedFact: maskPII(document.getElementById("reportFact").value),
-    factsAgreed: maskPII(document.getElementById("factsAgreed").value),
+    generatedFact: forceMaskRegisteredNames(maskPII(document.getElementById("reportFact").value)),
+    factsAgreed: forceMaskRegisteredNames(maskPII(document.getElementById("factsAgreed").value)),
     suspectsSummary: suspectsSummary(true),
   };
 }
