@@ -44,25 +44,31 @@
   }
   .tabs {
     display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    background: var(--field);
     border-bottom: 1px solid var(--line);
-    padding: 0 32px;
+    padding: 10px 32px;
   }
   .tab-btn {
-    padding: 14px 20px;
-    background: none;
-    border: none;
-    border-bottom: 2px solid transparent;
+    padding: 10px 16px;
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 8px 8px 0 0;
     color: var(--muted);
-    font-weight: 500;
-    font-size: 14.5px;
+    font-weight: 600;
+    font-size: 13.5px;
     cursor: pointer;
-    margin-bottom: -1px;
     font-family: inherit;
+    transition: all 0.12s ease;
   }
+  .tab-btn:hover { border-color: var(--accent); color: var(--accent); }
   .tab-btn.active {
-    border-bottom: 2px solid var(--ink);
-    color: var(--ink);
-    font-weight: 700;
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--paper);
+    font-weight: 800;
+    box-shadow: 0 2px 6px rgba(53,80,107,0.3);
   }
   main {
     padding: 28px 32px 60px;
@@ -77,6 +83,24 @@
     font-weight: 600;
     margin-bottom: 6px;
     text-transform: uppercase;
+  }
+  .panel { counter-reset: stepnum; }
+  .flow-label::before {
+    counter-increment: stepnum;
+    content: counter(stepnum);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--seal);
+    color: var(--paper);
+    font-size: 11px;
+    font-weight: 800;
+    margin-right: 7px;
+    text-transform: none;
+    letter-spacing: 0;
   }
   textarea, input[type=text] {
     width: 100%;
@@ -127,15 +151,17 @@
   .btn.ghost { background: transparent; color: var(--ink); }
   .btn.seal { background: var(--seal); border-color: var(--seal); }
   .btn.dashed {
-    background: transparent;
-    border: 1px dashed var(--muted);
-    color: var(--muted);
-    border-radius: 3px;
-    padding: 7px 14px;
-    font-size: 12.5px;
-    font-weight: 600;
+    background: var(--accent);
+    border: 2px solid var(--accent);
+    color: var(--paper);
+    border-radius: 4px;
+    padding: 10px 18px;
+    font-size: 13.5px;
+    font-weight: 700;
     cursor: pointer;
+    box-shadow: 0 2px 6px rgba(53,80,107,0.35);
   }
+  .btn.dashed:hover { opacity: 0.88; }
   .field-block { margin-bottom: 18px; }
   .hint { font-size: 12px; color: var(--muted); margin-top: 8px; margin-bottom: 10px; }
   .warn-box {
@@ -262,10 +288,9 @@
 <header>
   <div class="eyebrow">PROTOTYPE · 범죄사실 및 수사결과보고서 프롬프트 생성기</div>
   <h1>수사서류 작성 지원 도구</h1>
-  <div class="sub">이 도구는 API를 호출하지 않습니다. 자료를 넣고 프롬프트를 복사해서, 원하는 AI(Gemini, ChatGPT, Claude.ai 등)에 붙여넣어 결과를 받는 방식입니다.</div>
+  <div class="sub">1. 해당 사이트(도구)는 사이트 내에서 결과를 얻는 방식이 아닌, 저장된 프롬프트 복사를 통해 AI에게 질문하여 결과를 받는 방식입니다.<br/>2. 결과를 그대로 사용하는 것보다 결과를 받아 다듬어 사용하기 바랍니다.</div>
   <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; align-items:center;">
-    <a href="https://claude.ai/new" target="_blank" rel="noopener noreferrer" class="btn ghost" style="text-decoration:none; display:inline-block;">Claude에게 물어보러 가기 ↗</a>
-    <a href="https://gemini.google.com/app" target="_blank" rel="noopener noreferrer" class="btn ghost" style="text-decoration:none; display:inline-block;">Gemini에게 물어보러 가기 ↗</a>
+    <button class="btn" id="btnShowGuide" style="background:var(--accent); border-color:var(--accent);">📖 설명서</button>
     <button class="btn ghost" id="btnSaveCase">사건 저장 (파일로 저장)</button>
     <label class="btn ghost" style="cursor:pointer; margin:0;">사건 불러오기
       <input type="file" id="loadCaseInput" accept=".json" style="display:none;" />
@@ -273,33 +298,38 @@
     <button class="btn ghost" id="btnResetAll" style="border-color:#E24B4A; color:#7A2E2E;">전체 초기화</button>
     <span id="autosaveStatus" class="hint" style="margin:0;"></span>
   </div>
-  <div class="hint" style="margin-top:8px; margin-bottom:0;">먼저 "프롬프트 복사" 버튼으로 복사한 다음, 이 버튼을 눌러 새 탭에서 붙여넣기(Ctrl+V) 하시면 됩니다. 작업 중인 사건은 "사건 저장"으로 내려받아두면 나중에 "사건 불러오기"로 이어서 작업할 수 있어요. 입력하시는 동안 브라우저에 자동으로 임시저장도 되니, 실수로 새로고침해도 다시 열면 물어봐요.</div>
+
+  <div id="guidePanel" class="card" style="display:none; margin-top:16px;">
+    <div class="label" style="margin-top:0;">탭별 사용법</div>
+    <div id="guideContent" style="font-size:13.5px; line-height:1.8;"></div>
+  </div>
 </header>
 
 <div class="tabs">
-  <button class="tab-btn active" data-tab="victimprep">① 고소인 조사 준비</button>
-  <button class="tab-btn" data-tab="fact">② 범죄사실 작성</button>
-  <button class="tab-btn" data-tab="multisuspect">③ 다수 피의자 범죄사실</button>
-  <button class="tab-btn" data-tab="multicrime">④ 단일 피의자 다수 죄명</button>
-  <button class="tab-btn" data-tab="prep">⑤ 피신 준비</button>
-  <button class="tab-btn" data-tab="crimelist">⑥ 범죄일람표 작성</button>
-  <button class="tab-btn" data-tab="report">⑦ 수결 작성</button>
-  <button class="tab-btn" data-tab="dismiss">⑧ 불송치 결정서 작성</button>
+  <button class="tab-btn active" data-tab="imageextract">① 사진에서 텍스트 추출</button>
+  <button class="tab-btn" data-tab="victimprep">② 고소인 조사 준비</button>
+  <button class="tab-btn" data-tab="fact">③ 범죄사실 작성</button>
+  <button class="tab-btn" data-tab="multisuspect">④ 다수 피의자 범죄사실</button>
+  <button class="tab-btn" data-tab="multicrime">⑤ 단일 피의자 다수 죄명</button>
+  <button class="tab-btn" data-tab="prep">⑥ 피신 준비</button>
+  <button class="tab-btn" data-tab="crimelist">⑦ 범죄일람표 작성</button>
+  <button class="tab-btn" data-tab="report">⑧ 수결 작성</button>
+  <button class="tab-btn" data-tab="dismiss">⑨ 불송치 결정서 작성</button>
 </div>
 
 <main>
 
   <!-- ===================== TAB 1: 범죄사실 ===================== -->
   <div class="panel" id="panel-fact">
-    <div class="label">죄종 선택</div>
+    <div class="label flow-label">죄종 선택</div>
     <div id="crime-pills" style="margin-bottom:22px;"></div>
 
-    <div class="label">고소장 / 진정서 / 고발장 내용</div>
+    <div class="label flow-label">고소장 / 진정서 / 고발장 내용</div>
     <div class="field-block">
       <textarea id="complaintText" rows="6" placeholder="예: 피해자는 2024. 3.경 인터넷에서 원단 판매 광고를 보고 피의자에게 연락하여..."></textarea>
     </div>
 
-    <div class="label">진술서 / 진술조서 내용</div>
+    <div class="label flow-label">진술서 / 진술조서 내용</div>
     <div class="field-block">
       <textarea id="statementText" rows="6" placeholder="예: 문: 피해를 입은 경위를 진술하세요. 답: ..."></textarea>
     </div>
@@ -307,7 +337,7 @@
     <div id="promptFactWrap" style="display:inline-block;"></div>
 
     <div style="margin-top:26px;">
-      <div class="label">AI가 써준 범죄사실 붙여넣기 (결과를 여기 저장해두면 2번 탭에서 참고자료로 씁니다)</div>
+      <div class="label flow-label">AI가 써준 범죄사실 붙여넣기 (결과를 여기 저장해두면 2번 탭에서 참고자료로 씁니다)</div>
       <div class="hint" style="margin-top:0;">AI가 버전 A/B/C 세 개를 줄 거예요. 셋을 비교해서 가장 적절한 걸 고르시거나, 필요한 부분만 조합해서 최종본 하나만 이 칸에 남겨두세요.</div>
       <textarea id="generatedFact" rows="10" placeholder="다른 AI 채팅창에서 받은 범죄사실 결과를 여기에 붙여넣으세요. (버전 A/B/C를 비교한 뒤 최종본 하나만 남겨주세요)"></textarea>
       <div id="factDownloadWrap"></div>
@@ -317,13 +347,13 @@
   <!-- ===================== TAB 2: 수사결과보고서 ===================== -->
   <div class="panel" id="panel-report">
 
-    <div class="label">범죄사실</div>
+    <div class="label flow-label">범죄사실</div>
     <div class="hint" style="margin-top:0;">1번 탭에서 작성한 범죄사실이 있으면 자동으로 채워집니다. 여기서 직접 수정하거나 새로 붙여넣어도 됩니다.</div>
     <div class="field-block">
       <textarea id="reportFact" rows="8" placeholder="이 사건의 범죄사실을 붙여넣으세요. (1번 탭에서 작성했다면 자동으로 채워집니다)"></textarea>
     </div>
 
-    <div class="label">피의자 목록 (여러 명일 수 있어요, 이름과 각자의 죄명을 지정하세요)</div>
+    <div class="label flow-label">피의자 목록 (여러 명일 수 있어요, 이름과 각자의 죄명을 지정하세요)</div>
     <div class="hint" style="margin-top:0;">이름을 모르면 비워두세요(성명불상으로 처리). 피의자가 여러 명이고 죄명이 서로 다르면 각자 지정해주세요.</div>
     <div id="suspectsWrap" style="margin-bottom:10px;"></div>
     <button class="btn ghost" id="btnAddSuspect" style="margin-bottom:22px;">피의자 추가</button>
@@ -339,9 +369,9 @@
       <button class="btn ghost" id="btnAddNamePair">이름 추가</button>
     </div>
 
-    <div class="label">원자료 입력 (이 사건에서 확보된 서류를 각각 붙여넣으세요, 여러 차례 받았다면 각각 추가하세요)</div>
+    <div class="label flow-label">원자료 입력 (이 사건에서 확보된 서류를 각각 붙여넣으세요, 여러 차례 받았다면 각각 추가하세요)</div>
     <div class="hint" style="margin-top:0;">
-      비어있는 항목은 프롬프트에서 "자료 없음"으로 표시됩니다. 이미지/PDF는 아래 업로드 버튼으로 브라우저에서 바로 텍스트로 변환됩니다(무료, API 불필요).
+      비어있는 항목은 프롬프트에서 "자료 없음"으로 표시됩니다. 이미지/PDF는 ①번 탭에서 먼저 텍스트로 바꿔서 붙여넣으세요.
     </div>
 
     <div class="label" style="margin-top:14px;">고소장 / 진정서 / 고발장 원문</div>
@@ -364,7 +394,7 @@
 
     <div class="section-divider"></div>
 
-    <div class="label">사건 유형</div>
+    <div class="label flow-label">사건 유형</div>
     <div class="mode-row">
       <button class="mode-btn active" data-mode="dispute">쟁점형 (진술이 엇갈리는 사건)</button>
       <button class="mode-btn" data-mode="confession">자백형 (피의자가 혐의 인정)</button>
@@ -377,15 +407,15 @@
     <button class="btn ghost" id="btnAddExtraItem" style="margin-bottom:22px;">항목 추가</button>
 
     <div id="confessionBlock" style="display:none;">
-      <div class="label">가. 피의자의 자백</div>
+      <div class="label flow-label">가. 피의자의 자백</div>
       <div class="hint" style="margin-top:0;">비워두어도 괜찮습니다. 아래 "AI에게 전체 보고서 물어보기"를 쓰면, AI가 위 피의자신문조서 원문을 확인해서 자백 내용을 정리해줍니다.</div>
       <div class="field-block"><textarea id="confession" rows="4" placeholder="피의자가 인정한 내용 요약... (비워두면 AI가 피의자신문조서에서 찾아 채웁니다)"></textarea></div>
-      <div class="label">나. 자백에 대한 보강증거</div>
+      <div class="label flow-label">나. 자백에 대한 보강증거</div>
       <div class="field-block"><textarea id="confessionEvidence" rows="3" placeholder="고소장(제00쪽), 계좌거래내역(제00쪽) 등... (비워두면 AI가 원자료에서 찾아 채웁니다)"></textarea></div>
     </div>
 
     <div id="factsSection">
-      <div class="label">가. 다툼이 없이 인정되는 사실</div>
+      <div class="label flow-label">가. 다툼이 없이 인정되는 사실</div>
       <div class="hint" style="margin-top:0;">⚠ 이 항목은 사건의 사실관계 토대가 되는 만큼, AI 초안을 그대로 쓰기보다 <strong>직접 작성하거나, 초안을 받더라도 원자료와 한 줄씩 대조 검증하는 것을 권장</strong>합니다.</div>
       <div id="promptFactsAgreedWrap" style="margin-bottom:12px;"></div>
       <div class="field-block">
@@ -394,7 +424,7 @@
     </div>
 
     <div id="precedentSection">
-      <div class="label">판례 추가 (쟁점을 찾기 전에 먼저 등록해두면, 아래 "쟁점 찾기" 단계에서 AI가 이 판례들을 참고해서 관련판례 칸까지 같이 채워줘요)</div>
+      <div class="label flow-label">판례 추가 (쟁점을 찾기 전에 먼저 등록해두면, 아래 "쟁점 찾기" 단계에서 AI가 이 판례들을 참고해서 관련판례 칸까지 같이 채워줘요)</div>
       <div class="hint" style="margin-top:0;">슈퍼로이어 등에서 찾은 판례를 판례번호+내용 형태로 붙여넣으세요.</div>
       <div class="warn-box">
         ⚠ <strong>AI가 제시하는 판례번호는 실제로 존재하는 다른 사건 번호를 갖다 붙이거나, 번호 자체를 지어내는 경우가 있어요.</strong> AI 답변에 나온 판례는 그대로 쓰지 마시고, 반드시 <a href="https://casenote.kr" target="_blank" rel="noopener noreferrer">casenote.kr</a>, <a href="https://www.law.go.kr" target="_blank" rel="noopener noreferrer">국가법령정보센터</a>, 종합법률정보 등에서 판례번호와 실제 판시내용이 일치하는지 직접 검색해서 확인한 뒤 판례 자료함에 등록해주세요.
@@ -405,7 +435,7 @@
     </div>
 
     <div id="disputesSection">
-      <div class="label">나. 쟁점</div>
+      <div class="label flow-label">나. 쟁점</div>
       <div class="hint" style="margin-top:0;">아래 프롬프트로 AI에게 쟁점을 물어본 뒤, 답변 전체를 아래 칸에 붙여넣고 "자동으로 쟁점 카드 나누기"를 누르면 AI가 만든 형식(나./다./1)2)3)4))에 맞춰 카드가 자동으로 만들어져요. 형식이 안 맞으면 "쟁점 추가"로 직접 만드세요.</div>
       <div id="promptDisputeWrap" style="margin-bottom:10px;"></div>
       <div class="field-block">
@@ -419,7 +449,7 @@
       <div id="disputeCards"></div>
     </div>
 
-    <div class="label">결정</div>
+    <div class="label flow-label">결정</div>
     <select id="decision">
       <option>송치(구속)</option>
       <option selected>송치(불구속)</option>
@@ -461,22 +491,22 @@
   <div class="panel" id="panel-prep">
     <div class="hint" style="margin-top:0;">이 탭은 2번 탭과 별개로 독립적으로 작동합니다. 죄명, 고소장, 진술조서만 넣으면 됩니다 (이름 불필요).</div>
 
-    <div class="label">죄종 선택</div>
+    <div class="label flow-label">죄종 선택</div>
     <div id="crime-pills-prep" style="margin-bottom:22px;"></div>
 
-    <div class="label">고소장 / 진정서 / 고발장 원문</div>
+    <div class="label flow-label">고소장 / 진정서 / 고발장 원문</div>
     <div class="field-block">
       <textarea id="prepComplaintText" rows="6" placeholder="이 사건의 고소장/진정서/고발장 원문을 붙여넣으세요."></textarea>
     </div>
 
-    <div class="label">진술서 / 진술조서 원문</div>
+    <div class="label flow-label">진술서 / 진술조서 원문</div>
     <div class="field-block">
       <textarea id="prepStatementText" rows="6" placeholder="고소인/참고인 진술서 또는 진술조서 원문을 붙여넣으세요."></textarea>
     </div>
 
     <div id="promptPrepWrap" style="margin-bottom:24px;"></div>
 
-    <div class="label">AI 답변 붙여넣기</div>
+    <div class="label flow-label">AI 답변 붙여넣기</div>
     <div class="hint" style="margin-top:0;">위 프롬프트로 받은 답변(필수질문/받아야할 자료/조사 전 알아야 할 정보)을 여기에 붙여넣어 저장해두세요.</div>
     <div class="field-block">
       <textarea id="prepAnswer" rows="16" placeholder="다른 AI 채팅창에서 받은 피의자신문조서 준비사항 답변을 여기에 붙여넣으세요."></textarea>
@@ -488,24 +518,24 @@
   <div class="panel" id="panel-multisuspect">
     <div class="hint" style="margin-top:0;">피의자가 여러 명인 사건용입니다. 이 탭도 완전히 독립적으로 작동해요. 이름을 등록하고 각자 관련된 죄명을 체크해두면, 어느 죄명에 누가 해당하는지 AI에게 명확히 알려줄 수 있어요. (같은 죄명에 여러 명이 묶이면, 공모관계인지 단독범행인지는 원자료를 보고 AI가 판단해요)</div>
 
-    <div class="label">피의자 목록 (이름 + 관련 죄명)</div>
+    <div class="label flow-label">피의자 목록 (이름 + 관련 죄명)</div>
     <div class="hint" style="margin-top:0;">실명을 그대로 쓰거나, 원자료에 A·B처럼 이니셜로 되어 있으면 그 표기 그대로 넣으세요. 원자료에 등장하는 이름과 반드시 일치해야 해요. 각 피의자마다 해당하는 죄명을 눌러서 선택하세요 (한 명이 여러 죄명에 해당해도 됩니다).</div>
     <div id="multiSuspectNamesWrap" style="margin-bottom:10px;"></div>
     <button class="btn ghost" id="btnAddMultiSuspectName" style="margin-bottom:22px;">피의자 추가</button>
 
-    <div class="label">고소장 / 진정서 / 고발장 내용</div>
+    <div class="label flow-label">고소장 / 진정서 / 고발장 내용</div>
     <div class="field-block">
       <textarea id="multiSuspectComplaintText" rows="6" placeholder="여러 피의자와 관련된 고소장/진정서/고발장 원문을 붙여넣으세요."></textarea>
     </div>
 
-    <div class="label">진술서 / 진술조서 내용</div>
+    <div class="label flow-label">진술서 / 진술조서 내용</div>
     <div class="field-block">
       <textarea id="multiSuspectStatementText" rows="6" placeholder="고소인/참고인 진술 등, 여러 피의자의 역할이나 관계가 드러나는 내용을 포함해서 붙여넣으세요."></textarea>
     </div>
 
     <div id="promptMultiSuspectWrap" style="margin-bottom:24px;"></div>
 
-    <div class="label">AI 답변 붙여넣기</div>
+    <div class="label flow-label">AI 답변 붙여넣기</div>
     <div class="field-block">
       <textarea id="multiSuspectAnswer" rows="16" placeholder="다른 AI 채팅창에서 받은 범죄사실 결과를 여기에 붙여넣으세요."></textarea>
     </div>
@@ -516,22 +546,22 @@
   <div class="panel" id="panel-multicrime">
     <div class="hint" style="margin-top:0;">피의자 한 명이 여러 범행(여러 죄명)을 저지른 사건용입니다. 이 탭도 완전히 독립적으로 작동해요.</div>
 
-    <div class="label">죄종 선택 (해당하는 죄명을 전부 체크, 여러 개 가능)</div>
+    <div class="label flow-label">죄종 선택 (해당하는 죄명을 전부 체크, 여러 개 가능)</div>
     <div id="crime-checklist-multicrime" style="margin-bottom:22px;"></div>
 
-    <div class="label">고소장 / 진정서 / 고발장 내용</div>
+    <div class="label flow-label">고소장 / 진정서 / 고발장 내용</div>
     <div class="field-block">
       <textarea id="multiCrimeComplaintText2" rows="6" placeholder="이 피의자와 관련된 여러 건의 고소장/진정서/고발장 원문을 붙여넣으세요."></textarea>
     </div>
 
-    <div class="label">진술서 / 진술조서 내용</div>
+    <div class="label flow-label">진술서 / 진술조서 내용</div>
     <div class="field-block">
       <textarea id="multiCrimeStatementText2" rows="6" placeholder="여러 범행에 걸친 진술 내용을 붙여넣으세요."></textarea>
     </div>
 
     <div id="promptMultiCrimeWrap" style="margin-bottom:24px;"></div>
 
-    <div class="label">AI 답변 붙여넣기</div>
+    <div class="label flow-label">AI 답변 붙여넣기</div>
     <div class="field-block">
       <textarea id="multiCrimeAnswer2" rows="16" placeholder="다른 AI 채팅창에서 받은 범죄사실 결과를 여기에 붙여넣으세요."></textarea>
     </div>
@@ -542,25 +572,25 @@
   <div class="panel" id="panel-crimelist">
     <div class="hint" style="margin-top:0;">완전히 독립된 탭입니다. 진정서·진술조서 중 필요한 정보가 다 있는 쪽 하나만 넣어도 되고, 둘 다 넣어도 됩니다.</div>
 
-    <div class="label">계좌 유형</div>
+    <div class="label flow-label">계좌 유형</div>
     <div class="mode-row">
       <button class="acct-btn active" data-accountmode="single">단일 계좌 (처음부터 끝까지 한 계좌로만 입금)</button>
       <button class="acct-btn" data-accountmode="multi">다수 계좌 (여러 계좌로 나뉘어 입금)</button>
     </div>
 
-    <div class="label">진정서 / 고소장 / 고발장 내용 (선택)</div>
+    <div class="label flow-label">진정서 / 고소장 / 고발장 내용 (선택)</div>
     <div class="field-block">
       <textarea id="crimeListComplaintText" rows="6" placeholder="정보가 여기 다 있으면 이것만 넣어도 됩니다."></textarea>
     </div>
 
-    <div class="label">진술서 / 진술조서 내용 (선택)</div>
+    <div class="label flow-label">진술서 / 진술조서 내용 (선택)</div>
     <div class="field-block">
       <textarea id="crimeListStatementText" rows="8" placeholder="정보가 여기 다 있으면 이것만 넣어도 됩니다."></textarea>
     </div>
 
     <div id="promptCrimeListWrap" style="margin-bottom:24px;"></div>
 
-    <div class="label">AI 답변(표) 붙여넣기</div>
+    <div class="label flow-label">AI 답변(표) 붙여넣기</div>
     <div class="hint" style="margin-top:0;">AI가 마크다운 표(| 순번 | 일시 | ... |) 형식으로 답을 줄 거예요. 그 표 부분을 그대로 복사해서 아래에 붙여넣으세요.</div>
     <div class="field-block">
       <textarea id="crimeListAnswer" rows="14" placeholder="| 순번 | 일시 | 편취방법 | 은행 | 계좌 | 명의자 | 피해금액 | 기망행위 |&#10;|---|---|---|---|---|---|---|---|&#10;| 1 | ... |"></textarea>
@@ -571,20 +601,47 @@
   </div>
 
   <!-- ===================== TAB 7: 고소인 조사 준비 ===================== -->
-  <div class="panel active" id="panel-victimprep">
+  <!-- ===================== TAB: 사진에서 텍스트 추출 ===================== -->
+  <div class="panel active" id="panel-imageextract">
+    <div class="hint" style="margin-top:0;">완전히 독립된 도구입니다. 사진(또는 PDF)에서 텍스트를 추출해서, 그 결과를 복사해두었다가 다른 탭의 입력칸에 붙여넣어 쓰세요.</div>
+
+    <div class="warn-box">
+      ⚠ 사진 자체를 외부 AI(Gemini/Claude 등) 채팅창에 직접 첨부하는 방식이라, 이 프로그램의 개인정보 자동 마스킹이 적용되지 않아요. 사진 속 실명·주민번호·계좌번호·전화번호가 그대로 노출된 채 전송됩니다. 첨부 전에 사진을 캡처 편집 툴로 가리거나, 꼭 필요한 부분만 잘라서 올리는 걸 권장해요.
+    </div>
+
+    <div class="label">사용 방법</div>
+    <div class="hint" style="margin-top:0;">
+      1) 아래 문구를 복사하세요 &nbsp;→&nbsp;
+      2) Claude나 Gemini를 열어서 그 채팅창에 사진을 직접 첨부하고 복사한 문구를 붙여넣으세요 &nbsp;→&nbsp;
+      3) 받은 텍스트 결과를 아래 "추출 결과" 칸에 붙여넣으세요 &nbsp;→&nbsp;
+      4) "복사" 버튼으로 복사해서, 필요한 다른 탭의 입력칸에 붙여넣으세요.
+    </div>
+
+    <div id="promptImageExtractWrap" style="margin: 16px 0 24px;"></div>
+
+    <div class="label">추출 결과</div>
+    <div class="field-block">
+      <textarea id="imageExtractResult" rows="16" placeholder="Gemini나 Claude에게 받은 텍스트 추출 결과를 여기에 붙여넣으세요."></textarea>
+    </div>
+    <button class="btn seal" id="btnCopyImageExtractResult">복사</button>
+    <span id="imageExtractCopyStatus" class="hint" style="margin-left:8px;"></span>
+  </div>
+
+  <!-- ===================== TAB: 고소인 조사 준비 ===================== -->
+  <div class="panel" id="panel-victimprep">
     <div class="hint" style="margin-top:0;">완전히 독립된 탭입니다. 고소인/참고인 진술조서를 받기 전 단계라, 고소장·진정서·고발장 내용과 죄종만으로 준비합니다. (피의자 신문 전 3번 탭과 같은 논리예요)</div>
 
-    <div class="label">죄종 선택</div>
+    <div class="label flow-label">죄종 선택</div>
     <div id="crime-pills-victimprep" style="margin-bottom:22px;"></div>
 
-    <div class="label">고소장 / 진정서 / 고발장 내용</div>
+    <div class="label flow-label">고소장 / 진정서 / 고발장 내용</div>
     <div class="field-block">
       <textarea id="victimPrepComplaintText" rows="8" placeholder="이 사건의 고소장/진정서/고발장 원문을 붙여넣으세요."></textarea>
     </div>
 
     <div id="promptVictimPrepWrap" style="margin-bottom:24px;"></div>
 
-    <div class="label">AI 답변 붙여넣기</div>
+    <div class="label flow-label">AI 답변 붙여넣기</div>
     <div class="hint" style="margin-top:0;">받은 답변(필수질문/받아야할 자료/조사 전 알아야 할 정보)을 여기에 붙여넣어 저장해두세요.</div>
     <div class="field-block">
       <textarea id="victimPrepAnswer" rows="16" placeholder="다른 AI 채팅창에서 받은 고소인 조사 준비사항 답변을 여기에 붙여넣으세요."></textarea>
@@ -599,7 +656,7 @@
       ⚠ 여기서 만든 초안은 참고용입니다. 실제 소속관서 결정서 양식(KICS 등)의 정확한 항목·서식과 다를 수 있으니, 초안 내용을 그대로 제출하지 마시고 반드시 실제 양식에 맞춰 옮겨 적어주세요.
     </div>
 
-    <div class="label">불송치 유형 (경찰수사규칙 제108조제1항)</div>
+    <div class="label flow-label">불송치 유형 (경찰수사규칙 제108조제1항)</div>
     <div class="mode-row" id="dismissTypeRow">
       <button class="acct-btn active" data-type="hyeuiA">혐의없음(범죄인정안됨)</button>
       <button class="acct-btn" data-type="hyeuiB">혐의없음(증거불충분)</button>
@@ -608,18 +665,18 @@
       <button class="acct-btn" data-type="gakha">각하</button>
     </div>
 
-    <div class="label" style="margin-top:20px;">피의자 이름 (여러 명이면 쉼표로 구분, 공모관계면 그대로 나열)</div>
+    <div class="label flow-label" style="margin-top:20px;">피의자 이름 (여러 명이면 쉼표로 구분, 공모관계면 그대로 나열)</div>
     <div class="field-block">
       <input type="text" id="dismissSuspectNames" placeholder="예: 노영길, 현숙자 (한 명이면 이름 하나만)" style="width:100%; max-width:400px;" />
     </div>
 
-    <div class="label">죄명</div>
+    <div class="label flow-label">죄명</div>
     <div class="field-block">
       <input type="text" id="dismissCrimeName" placeholder="예: 사기" style="width:100%; max-width:300px;" />
     </div>
 
     <div id="dismissReasonWrap" style="display:none;">
-      <div class="label">각하 사유 (경찰수사규칙 제108조제1항마목 기준)</div>
+      <div class="label flow-label">각하 사유 (경찰수사규칙 제108조제1항마목 기준)</div>
       <div class="mode-row" id="dismissReasonRow">
         <button class="acct-btn active" data-reason="ga">가. 고소장·진술만으로 혐의없음 등에 해당함이 명백</button>
         <button class="acct-btn" data-reason="na">나. 동일사건 재고소·재고발 (새 증거 없음)</button>
@@ -631,7 +688,7 @@
     <div id="dismissGakhaMaterialsWrap" style="display:none;">
       <div class="hint" style="margin-top:0;">각하는 실체 조사(수사결과보고서 작성) 이전, 고소장 단계에서 바로 끝내는 절차라 원자료를 직접 입력합니다.</div>
 
-      <div class="label" style="margin-top:20px;">고소장 / 진정서 / 고발장 내용</div>
+      <div class="label flow-label" style="margin-top:20px;">고소장 / 진정서 / 고발장 내용</div>
       <div class="field-block">
         <textarea id="dismissComplaintText" rows="8" placeholder="이 사건의 고소장/진정서/고발장 원문을 붙여넣으세요."></textarea>
       </div>
@@ -649,12 +706,12 @@
       <div id="dismissGakhaWarning" class="warn-box" style="display:none;"></div>
     </div>
 
-    <!-- 각하 이외 4개 유형: 이미 완성된 수결(⑦번) 최종 결과물을 입력으로 받음 -->
+    <!-- 각하 이외 4개 유형: 이미 완성된 수결(⑧번) 최종 결과물을 입력으로 받음 -->
     <div id="dismissReportWrap" style="display:none;">
-      <div class="hint" style="margin-top:0;">⑦ 수결 작성 탭에서 이미 완성한 최종 수사결과보고서(가.인정사실 + 나.쟁점 + 판례 + 의견)를 그대로 붙여넣으세요. 여기서 새로 사실관계를 재분석하지 않고, 그 결론을 불송치 결정서 형식(Ⅰ~Ⅳ)으로 압축·재구성합니다.</div>
-      <div class="label">⑦ 수결 탭 최종 수사결과보고서</div>
+      <div class="hint" style="margin-top:0;">⑧ 수결 작성 탭에서 이미 완성한 최종 수사결과보고서(가.인정사실 + 나.쟁점 + 판례 + 의견)를 그대로 붙여넣으세요. 여기서 새로 사실관계를 재분석하지 않고, 그 결론을 불송치 결정서 형식(Ⅰ~Ⅳ)으로 압축·재구성합니다.</div>
+      <div class="label flow-label">⑧ 수결 탭 최종 수사결과보고서</div>
       <div class="field-block">
-        <textarea id="dismissReportText" rows="14" placeholder="⑦ 수결 작성 탭에서 만든 최종 수사결과보고서(가.인정되는 사실 / 나.쟁점 / 판례 / 결정 등)를 통째로 붙여넣으세요."></textarea>
+        <textarea id="dismissReportText" rows="14" placeholder="⑧ 수결 작성 탭에서 만든 최종 수사결과보고서(가.인정되는 사실 / 나.쟁점 / 판례 / 결정 등)를 통째로 붙여넣으세요."></textarea>
       </div>
     </div>
 
@@ -674,14 +731,14 @@
         </div>
       </div>
       <div id="dismissJoegaWrap" style="display:none;">
-        <div class="label">위법성조각·책임조각 관련 사실 (⑦번 보고서에 이미 있다면 생략 가능)</div>
+        <div class="label">위법성조각·책임조각 관련 사실 (⑧번 보고서에 이미 있다면 생략 가능)</div>
         <div class="hint" style="margin-top:0;">정당방위·정당행위·피해자 승낙·긴급피난·강요된 행위 등 어느 사유에 해당하는지, 그걸 인정할 근거(진술·증거)를 추가로 강조하고 싶으면 적어주세요.</div>
         <div class="field-block">
           <textarea id="dismissJustification" rows="4" placeholder="예: 술에 취한 피해자 일행이 먼저 피의자에게 시비를 걸고 폭행하여, 이를 피하는 과정에서 상해를 가한 것으로 목격자 진술과 일치함. 정당방위에 해당."></textarea>
         </div>
       </div>
       <div id="dismissGongsoWrap" style="display:none;">
-        <div class="label">공소권없음 법정사유 (⑦번 보고서에 이미 있다면 생략 가능)</div>
+        <div class="label">공소권없음 법정사유 (⑧번 보고서에 이미 있다면 생략 가능)</div>
         <div class="hint" style="margin-top:0;">피의자 사망, 공소시효 완성, 친고죄 고소기간 경과, 반의사불벌죄 처벌불원 등 해당 사유만 간단히 적어주세요. ⚠ 사망 등 민감한 경위는 구체적으로 쓰지 마세요(예: "사망하였다" 정도만).</div>
         <div class="field-block">
           <textarea id="dismissGongsoReason" rows="3" placeholder="예: 피의자가 2024. 9. 25. 사망하였다(기록 제OO쪽 사망진단서)."></textarea>
@@ -1135,6 +1192,12 @@ function attachImageHelper(ta) {
   hint.textContent = "위 문구를 복사한 뒤 Gemini나 Claude를 열어서, 그 채팅창에 사진을 직접 첨부하고 문구를 붙여넣으세요. 받은 텍스트 결과를 이 칸에 붙여넣으면 됩니다.";
   wrap.appendChild(hint);
 
+  const warn = document.createElement("div");
+  warn.className = "warn-box";
+  warn.style.marginTop = "6px";
+  warn.textContent = "⚠ 사진 자체를 외부 AI 채팅창에 직접 첨부하는 방식이라, 이 프로그램의 개인정보 자동 마스킹이 적용되지 않아요. 사진 속 실명·주민번호·계좌번호·전화번호가 그대로 노출된 채 전송됩니다. 첨부 전에 사진을 캡처 편집 툴로 가리거나, 꼭 필요한 부분만 잘라서 올리는 걸 권장해요.";
+  wrap.appendChild(warn);
+
   ta.insertAdjacentElement("afterend", wrap);
   return wrap;
 }
@@ -1218,8 +1281,6 @@ function refreshFactPrompt() {
   wrap.appendChild(factPromptExportEl);
 }
 refreshFactPrompt();
-attachImageHelperById("complaintText");
-attachImageHelperById("statementText");
 document.getElementById("factDownloadWrap").appendChild(
   makeDownloadButton("파일로 저장 (.docx)", () => document.getElementById("generatedFact").value, "범죄사실")
 );
@@ -1350,7 +1411,6 @@ function renderRepeatableList(containerEl, list, opts) {
     row.appendChild(top);
     row.appendChild(ta);
     containerEl.appendChild(row);
-    attachImageHelper(ta);
   });
 }
 
@@ -1470,7 +1530,6 @@ function renderMiscItems() {
     row.appendChild(top);
     row.appendChild(ta);
     wrap.appendChild(row);
-    attachImageHelper(ta);
   });
 }
 
@@ -1508,7 +1567,6 @@ function renderPrecedents() {
     row.appendChild(top);
     row.appendChild(ta);
     wrap.appendChild(row);
-    attachImageHelper(ta);
   });
 }
 
@@ -1898,7 +1956,8 @@ function collectAllTextFields() {
     "multiCrimeComplaintText2","multiCrimeStatementText2","multiCrimeAnswer2",
     "crimeListComplaintText","crimeListStatementText","crimeListAnswer",
     "victimPrepComplaintText","victimPrepAnswer",
-    "dismissSuspectNames","dismissCrimeName","dismissComplaintText","dismissStatementText","dismissSuspectStatementText","dismissReportText","dismissPriorDecision","dismissAttendanceHistory","dismissJustification","dismissGongsoReason","dismissAnswer"
+    "dismissSuspectNames","dismissCrimeName","dismissComplaintText","dismissStatementText","dismissSuspectStatementText","dismissReportText","dismissPriorDecision","dismissAttendanceHistory","dismissJustification","dismissGongsoReason","dismissAnswer",
+    "imageExtractResult"
   ];
   const fields = {};
   ids.forEach(id => {
@@ -2078,8 +2137,6 @@ function renderPrepCrimePills() {
   });
 }
 renderPrepCrimePills();
-attachImageHelperById("prepComplaintText");
-attachImageHelperById("prepStatementText");
 
 function buildInterrogationPrepPrompt() {
   const complaintText = maskPII(document.getElementById("prepComplaintText").value);
@@ -2670,7 +2727,7 @@ extraContext +
 "먼저 '[각하 사유 해당성 검토]'를 쓴 다음, 위 자료로 불송치 결정서(각하) 초안을 작성해줘.";
   }
 
-  // 각하 이외 4개 유형: ⑦ 수결 탭 최종 보고서를 압축·재구성
+  // 각하 이외 4개 유형: ⑧ 수결 탭 최종 보고서를 압축·재구성
   const reportText = maskPII(document.getElementById("dismissReportText").value);
   const justification = maskPII(document.getElementById("dismissJustification").value);
   const gongsoReason = maskPII(document.getElementById("dismissGongsoReason").value);
@@ -2689,7 +2746,7 @@ commonStructure +
 "- 보고서의 결론(의견)이 지금 선택된 유형과 실제로 맞는지 스스로 검토할 것. 안 맞아 보이면 초안 마지막에 '[검토 의견]'으로 그 불일치를 지적할 것 — 무리하게 끼워맞추지 말 것\n" +
 "- 보고서 내용이 지금 유형 판단에 필요한 정보(예: 죄가안됨의 위법성조각 근거, 공소권없음의 법정사유)를 충분히 담고 있지 않다면, 그 점도 '[검토 의견]'으로 지적할 것\n\n" +
 extraContext +
-"[최종 수사결과보고서]\n" + (reportText || "(없음 — ⑦ 수결 작성 탭에서 만든 최종 보고서를 붙여넣어주세요)") + "\n\n" +
+"[최종 수사결과보고서]\n" + (reportText || "(없음 — ⑧ 수결 작성 탭에서 만든 최종 보고서를 붙여넣어주세요)") + "\n\n" +
 "위 자료로 불송치 결정서 초안을 작성해줘.";
 }
 
@@ -2708,6 +2765,51 @@ document.getElementById("dismissDownloadWrap").appendChild(
     return "불송치 결정서 — " + crimeName + "\n\n" + body;
   }, "불송치결정서")
 );
+
+// ===================== 사진에서 텍스트 추출 (독립 탭) =====================
+document.getElementById("promptImageExtractWrap").appendChild(
+  makePromptExport("사진에서 텍스트 추출하기 (Gemini/Claude에게 직접)", buildImageExtractPrompt)
+);
+document.getElementById("btnCopyImageExtractResult").onclick = () => {
+  copyText(document.getElementById("imageExtractResult").value, document.getElementById("imageExtractCopyStatus"));
+};
+
+// ===================== 설명서 =====================
+const TAB_GUIDE = [
+  { tab: "① 사진에서 텍스트 추출", desc: "사진(또는 PDF)에서 텍스트를 추출하는 독립 도구예요. 지시문을 복사해서 Gemini/Claude에 사진과 함께 보내고, 받은 결과를 여기 붙여넣은 뒤 복사해서 다른 탭에 옮겨 쓰세요. 사진을 외부 AI에 직접 보내는 방식이라 개인정보 마스킹이 안 된다는 점 주의하세요." },
+  { tab: "② 고소인 조사 준비", desc: "죄종(다중 선택 가능)을 고르고, <b>고소장/진정서/고발장 원문을 입력칸에 붙여넣은 뒤</b> '프롬프트 복사'로 AI에게 질문하세요. AI 답변(필수질문·확보할 자료·미리 알아둘 정보)을 받아서 'AI 답변 붙여넣기' 칸에 넣으면 완성이에요. 고소인·참고인 진술조서를 아직 받기 전 단계에 씁니다." },
+  { tab: "③ 범죄사실 작성", desc: "죄종 1개를 고르고 <b>고소장+진술조서 원문을 각 입력칸에 붙여넣은 뒤</b> '프롬프트 복사'로 AI에게 질문하면, 범죄사실 3가지 버전(전체 포함형/엄격 검증형/AI 자율 판단형)을 한 번에 받을 수 있어요. 받은 답변 중 고른(또는 조합한) 최종본을 'AI가 써준 범죄사실' 칸에 붙여넣으세요. 피의자 1명·죄명 1개 사건용입니다." },
+  { tab: "④ 다수 피의자 범죄사실", desc: "피의자가 여러 명일 때 씁니다. 각 피의자 이름과 관련 죄명을 등록하고 <b>고소장+진술조서 원문을 입력</b>한 뒤 '프롬프트 복사'로 질문하면, 공모관계 가정 버전과 개별범죄 가정 버전 2가지를 받아 비교할 수 있어요. 공모 여부는 AI가 원자료를 근거로 판단해요." },
+  { tab: "⑤ 단일 피의자 다수 죄명", desc: "피의자 한 명이 여러 범행(예: 사기+횡령)을 저지른 경우예요. 해당 죄명을 전부 체크하고 <b>고소장+진술조서 원문을 입력</b>한 뒤 프롬프트를 복사해 질문하면, 죄명별로 가./나./다. 항목으로 나눠 각각 완결된 범죄사실을 받을 수 있어요." },
+  { tab: "⑥ 피신 준비", desc: "피의자신문 전 준비 탭이에요. 죄종(다중 선택 가능)을 고르고 <b>고소장+진술조서 원문을 입력</b>한 뒤 프롬프트를 복사해 질문하면, 피의자에게 물어볼 필수질문·확보할 자료·조사 전 알아둘 정보를 받을 수 있어요." },
+  { tab: "⑦ 범죄일람표 작성", desc: "단일/다수 계좌 여부를 고르고 <b>자료(고소장·진술조서 등)를 입력</b>한 뒤 프롬프트를 복사해 질문하세요. AI 답변은 반드시 코드블록(```)째로 통째로 복사해서 붙여넣어야 표가 깨지지 않아요. 붙여넣은 뒤 '표 미리보기'로 확인하고 '표로 파일 저장'을 누르면 실제 테두리 있는 Word 표(.docx)로 다운로드돼요." },
+  { tab: "⑧ 수결 작성", desc: "수사결과보고서를 만드는 탭이에요. 피의자 목록(이름+죄명, 여러 명·여러 죄명 가능)을 등록하고 <b>고소장·진술조서·피의자신문조서(다회차) 원문을 각각 입력</b>한 뒤, 판례 자료함을 채우고, '인정되는 사실 물어보기' → 'AI 답변 붙여넣기' → '쟁점 물어보기' → 붙여넣기 순서로 프롬프트를 복사해 질문하며 채워나갑니다. 마지막에 '결론'까지 정하면 완성이에요." },
+  { tab: "⑨ 불송치 결정서 작성", desc: "불송치 유형 5가지 중 골라서 씁니다. '각하'는 <b>고소장(+고소인 진술) 원문을 직접 입력</b>해서 바로 프롬프트를 만들고(피의자신문조서 있으면 화면에 경고가 떠요), 나머지 4개 유형은 <b>⑧번 탭에서 이미 완성한 최종 수사결과보고서를 통째로 붙여넣은 뒤</b> 프롬프트를 복사해 질문합니다. 그 결론을 새로 판단하지 않고 그대로 압축·재구성해줘요." },
+];
+
+const GUIDE_INTRO =
+  "<div style='margin-bottom:18px; padding-bottom:16px; border-bottom:1px solid var(--line);'>" +
+  "<strong>이 프로그램은 API를 직접 호출하지 않는 '프롬프트 생성기'예요. 어느 탭이든 사용법은 거의 똑같아요:</strong><br/><br/>" +
+  "① 고소장·진술조서·피의자신문조서 같은 <strong>원본 자료를 텍스트 그대로</strong> 해당 입력칸에 붙여넣습니다.<br/>" +
+  "② <strong>'프롬프트 복사' 버튼</strong>을 누르면, 그 자료를 바탕으로 정교하게 짜인 질문(프롬프트)이 만들어져요.<br/>" +
+  "③ 그 프롬프트를 복사해서 <strong>Claude나 Gemini 같은 외부 AI 채팅창에 붙여넣고 질문</strong>합니다 (버튼 눌러 바로 이동 가능).<br/>" +
+  "④ AI가 준 답변을 그대로 복사해서, 이 프로그램의 <strong>'AI 답변 붙여넣기' 칸</strong>에 넣습니다.<br/>" +
+  "⑤ 필요하면 <strong>'개인정보 복원'</strong> 버튼으로 가려졌던 이름·계좌번호 등을 원래 값으로 되돌리고, <strong>'저장(다운로드)'</strong> 버튼으로 .docx 파일을 받습니다.<br/><br/>" +
+  "📷 <strong>만약 문서가 사진으로만 있거나 손으로 옮겨 적기 번거롭다면</strong>, 먼저 <strong>①번 탭(사진에서 텍스트 추출)</strong>에서 사진을 텍스트로 바꾸세요. 그렇게 나온 텍스트를 위에서 말한 '원본 자료' 자리에 그대로 붙여넣으면 됩니다." +
+  "</div>";
+
+function renderGuideContent() {
+  const el = document.getElementById("guideContent");
+  el.innerHTML = GUIDE_INTRO + TAB_GUIDE.map(g =>
+    "<div style='margin-bottom:14px;'><strong>" + g.tab + "</strong><br/>" + g.desc + "</div>"
+  ).join("");
+}
+renderGuideContent();
+
+document.getElementById("btnShowGuide").onclick = () => {
+  const panel = document.getElementById("guidePanel");
+  panel.style.display = panel.style.display === "none" ? "block" : "none";
+};
 
 // ===================== 초기 렌더 =====================
 renderSuspects();
