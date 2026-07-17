@@ -277,18 +277,20 @@
 </header>
 
 <div class="tabs">
-  <button class="tab-btn active" data-tab="fact">① 범죄사실</button>
-  <button class="tab-btn" data-tab="report">② 수사결과보고서</button>
-  <button class="tab-btn" data-tab="prep">③ 피의자신문조서 준비</button>
-  <button class="tab-btn" data-tab="multisuspect">④ 다수 피의자 범죄사실</button>
-  <button class="tab-btn" data-tab="multicrime">⑤ 다수 범행 범죄사실</button>
-  <button class="tab-btn" data-tab="crimelist">⑥ 범죄일람표</button>
+  <button class="tab-btn active" data-tab="victimprep">① 고소인 조사 준비</button>
+  <button class="tab-btn" data-tab="fact">② 범죄사실 작성</button>
+  <button class="tab-btn" data-tab="multisuspect">③ 다수 피의자 범죄사실</button>
+  <button class="tab-btn" data-tab="multicrime">④ 단일 피의자 다수 죄명</button>
+  <button class="tab-btn" data-tab="prep">⑤ 피신 준비</button>
+  <button class="tab-btn" data-tab="crimelist">⑥ 범죄일람표 작성</button>
+  <button class="tab-btn" data-tab="report">⑦ 수결 작성</button>
+  <button class="tab-btn" data-tab="dismiss">⑧ 불송치 결정서 작성</button>
 </div>
 
 <main>
 
   <!-- ===================== TAB 1: 범죄사실 ===================== -->
-  <div class="panel active" id="panel-fact">
+  <div class="panel" id="panel-fact">
     <div class="label">죄종 선택</div>
     <div id="crime-pills" style="margin-bottom:22px;"></div>
 
@@ -568,6 +570,135 @@
     <div id="crimeListPreviewWrap" style="margin-top:20px;"></div>
   </div>
 
+  <!-- ===================== TAB 7: 고소인 조사 준비 ===================== -->
+  <div class="panel active" id="panel-victimprep">
+    <div class="hint" style="margin-top:0;">완전히 독립된 탭입니다. 고소인/참고인 진술조서를 받기 전 단계라, 고소장·진정서·고발장 내용과 죄종만으로 준비합니다. (피의자 신문 전 3번 탭과 같은 논리예요)</div>
+
+    <div class="label">죄종 선택</div>
+    <div id="crime-pills-victimprep" style="margin-bottom:22px;"></div>
+
+    <div class="label">고소장 / 진정서 / 고발장 내용</div>
+    <div class="field-block">
+      <textarea id="victimPrepComplaintText" rows="8" placeholder="이 사건의 고소장/진정서/고발장 원문을 붙여넣으세요."></textarea>
+    </div>
+
+    <div id="promptVictimPrepWrap" style="margin-bottom:24px;"></div>
+
+    <div class="label">AI 답변 붙여넣기</div>
+    <div class="hint" style="margin-top:0;">받은 답변(필수질문/받아야할 자료/조사 전 알아야 할 정보)을 여기에 붙여넣어 저장해두세요.</div>
+    <div class="field-block">
+      <textarea id="victimPrepAnswer" rows="16" placeholder="다른 AI 채팅창에서 받은 고소인 조사 준비사항 답변을 여기에 붙여넣으세요."></textarea>
+    </div>
+    <div id="victimPrepDownloadWrap"></div>
+  </div>
+
+  <!-- ===================== TAB 8: 불송치(각하) 작성 ===================== -->
+  <div class="panel" id="panel-dismiss">
+    <div class="hint" style="margin-top:0;">완전히 독립된 탭입니다. 혐의없음(범죄인정안됨·증거불충분)·죄가안됨·공소권없음·각하, 5개 불송치 유형을 하나의 결정서 구조(피의자/죄명/주문/피의사실과 불송치 이유)로 작성합니다.</div>
+    <div class="warn-box">
+      ⚠ 여기서 만든 초안은 참고용입니다. 실제 소속관서 결정서 양식(KICS 등)의 정확한 항목·서식과 다를 수 있으니, 초안 내용을 그대로 제출하지 마시고 반드시 실제 양식에 맞춰 옮겨 적어주세요.
+    </div>
+
+    <div class="label">불송치 유형 (경찰수사규칙 제108조제1항)</div>
+    <div class="mode-row" id="dismissTypeRow">
+      <button class="acct-btn active" data-type="hyeuiA">혐의없음(범죄인정안됨)</button>
+      <button class="acct-btn" data-type="hyeuiB">혐의없음(증거불충분)</button>
+      <button class="acct-btn" data-type="joega">죄가안됨</button>
+      <button class="acct-btn" data-type="gongso">공소권없음</button>
+      <button class="acct-btn" data-type="gakha">각하</button>
+    </div>
+
+    <div class="label" style="margin-top:20px;">피의자 이름 (여러 명이면 쉼표로 구분, 공모관계면 그대로 나열)</div>
+    <div class="field-block">
+      <input type="text" id="dismissSuspectNames" placeholder="예: 노영길, 현숙자 (한 명이면 이름 하나만)" style="width:100%; max-width:400px;" />
+    </div>
+
+    <div class="label">죄명</div>
+    <div class="field-block">
+      <input type="text" id="dismissCrimeName" placeholder="예: 사기" style="width:100%; max-width:300px;" />
+    </div>
+
+    <div id="dismissReasonWrap" style="display:none;">
+      <div class="label">각하 사유 (경찰수사규칙 제108조제1항마목 기준)</div>
+      <div class="mode-row" id="dismissReasonRow">
+        <button class="acct-btn active" data-reason="ga">가. 고소장·진술만으로 혐의없음 등에 해당함이 명백</button>
+        <button class="acct-btn" data-reason="na">나. 동일사건 재고소·재고발 (새 증거 없음)</button>
+        <button class="acct-btn" data-reason="da">다. 출석불응·소재불명</button>
+      </div>
+    </div>
+
+    <!-- 각하 전용: 원자료 직접 입력 (수결 이전 단계라서 독립) -->
+    <div id="dismissGakhaMaterialsWrap" style="display:none;">
+      <div class="hint" style="margin-top:0;">각하는 실체 조사(수사결과보고서 작성) 이전, 고소장 단계에서 바로 끝내는 절차라 원자료를 직접 입력합니다.</div>
+
+      <div class="label" style="margin-top:20px;">고소장 / 진정서 / 고발장 내용</div>
+      <div class="field-block">
+        <textarea id="dismissComplaintText" rows="8" placeholder="이 사건의 고소장/진정서/고발장 원문을 붙여넣으세요."></textarea>
+      </div>
+
+      <div class="label">고소인 / 고발인 진술 내용 (있는 경우만)</div>
+      <div class="field-block">
+        <textarea id="dismissStatementText" rows="6" placeholder="고소인/고발인의 진술서나 진술조서가 있다면 붙여넣으세요. 없으면 비워두셔도 됩니다."></textarea>
+      </div>
+
+      <div class="label">피의자신문조서 내용 (있는 경우만)</div>
+      <div class="hint" style="margin-top:0;">⚠ 각하는 피의자·참고인을 조사하지 않은 경우에만 가능한 유형이에요. 여기에 내용을 넣으시면 아래 경고가 바로 뜨고, 프롬프트에도 그 점이 반영돼요.</div>
+      <div class="field-block">
+        <textarea id="dismissSuspectStatementText" rows="6" placeholder="피의자신문조서가 있다면 붙여넣으세요. 없으면 비워두세요."></textarea>
+      </div>
+      <div id="dismissGakhaWarning" class="warn-box" style="display:none;"></div>
+    </div>
+
+    <!-- 각하 이외 4개 유형: 이미 완성된 수결(⑦번) 최종 결과물을 입력으로 받음 -->
+    <div id="dismissReportWrap" style="display:none;">
+      <div class="hint" style="margin-top:0;">⑦ 수결 작성 탭에서 이미 완성한 최종 수사결과보고서(가.인정사실 + 나.쟁점 + 판례 + 의견)를 그대로 붙여넣으세요. 여기서 새로 사실관계를 재분석하지 않고, 그 결론을 불송치 결정서 형식(Ⅰ~Ⅳ)으로 압축·재구성합니다.</div>
+      <div class="label">⑦ 수결 탭 최종 수사결과보고서</div>
+      <div class="field-block">
+        <textarea id="dismissReportText" rows="14" placeholder="⑦ 수결 작성 탭에서 만든 최종 수사결과보고서(가.인정되는 사실 / 나.쟁점 / 판례 / 결정 등)를 통째로 붙여넣으세요."></textarea>
+      </div>
+    </div>
+
+    <div id="dismissExtraWrap">
+      <div id="dismissNaWrap" style="display:none;">
+        <div class="label">이전 불송치/불기소 결정 내용</div>
+        <div class="hint" style="margin-top:0;">언제, 어느 기관에서, 어떤 결정(불송치/불기소 유형)이 있었는지 아는 대로 적어주세요.</div>
+        <div class="field-block">
+          <textarea id="dismissPriorDecision" rows="4" placeholder="예: 2024. 3.경 같은 내용으로 OO경찰서에 고소하여 혐의없음(증거불충분) 불송치 결정을 받은 사실이 있음. 이번 고소장은 그때와 동일한 내용으로 보임."></textarea>
+        </div>
+      </div>
+      <div id="dismissDaWrap" style="display:none;">
+        <div class="label">출석요구 이력</div>
+        <div class="hint" style="margin-top:0;">출석요구 일자, 방법(전화/우편/문자 등), 고소인의 반응이나 소재불명 경위를 적어주세요.</div>
+        <div class="field-block">
+          <textarea id="dismissAttendanceHistory" rows="4" placeholder="예: 2024. 5. 1., 5. 10., 5. 20. 총 3회 전화 및 문자로 출석요구 하였으나 응답 없음. 등록된 주소지 방문 결과 이사한 상태로 확인됨."></textarea>
+        </div>
+      </div>
+      <div id="dismissJoegaWrap" style="display:none;">
+        <div class="label">위법성조각·책임조각 관련 사실 (⑦번 보고서에 이미 있다면 생략 가능)</div>
+        <div class="hint" style="margin-top:0;">정당방위·정당행위·피해자 승낙·긴급피난·강요된 행위 등 어느 사유에 해당하는지, 그걸 인정할 근거(진술·증거)를 추가로 강조하고 싶으면 적어주세요.</div>
+        <div class="field-block">
+          <textarea id="dismissJustification" rows="4" placeholder="예: 술에 취한 피해자 일행이 먼저 피의자에게 시비를 걸고 폭행하여, 이를 피하는 과정에서 상해를 가한 것으로 목격자 진술과 일치함. 정당방위에 해당."></textarea>
+        </div>
+      </div>
+      <div id="dismissGongsoWrap" style="display:none;">
+        <div class="label">공소권없음 법정사유 (⑦번 보고서에 이미 있다면 생략 가능)</div>
+        <div class="hint" style="margin-top:0;">피의자 사망, 공소시효 완성, 친고죄 고소기간 경과, 반의사불벌죄 처벌불원 등 해당 사유만 간단히 적어주세요. ⚠ 사망 등 민감한 경위는 구체적으로 쓰지 마세요(예: "사망하였다" 정도만).</div>
+        <div class="field-block">
+          <textarea id="dismissGongsoReason" rows="3" placeholder="예: 피의자가 2024. 9. 25. 사망하였다(기록 제OO쪽 사망진단서)."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div id="promptDismissWrap" style="margin-bottom:24px;"></div>
+
+    <div class="label">AI 답변 붙여넣기</div>
+    <div class="hint" style="margin-top:0;">받은 불송치 결정서 초안을 여기에 붙여넣어 저장해두세요.</div>
+    <div class="field-block">
+      <textarea id="dismissAnswer" rows="16" placeholder="다른 AI 채팅창에서 받은 불송치 결정서 초안을 여기에 붙여넣으세요."></textarea>
+    </div>
+    <div id="dismissDownloadWrap"></div>
+  </div>
+
 </main>
 
 <script>
@@ -630,7 +761,7 @@ const PATTERN_GUIDE = {
   "명예훼손(사실적시)": "구조: [관계/지위 서두] → [일시·장소·인원] → [적시한 구체적 사실] → [결어: 공연히 사실을 적시하여 명예를 훼손하였다].",
   "명예훼손(허위사실적시)": "구조: 사실적시와 동일하나 [이는 사실과 다른 것이었다]는 문구 필수 → [결어: 공연히 허위의 사실을 적시하여 명예를 훼손하였다].",
   "정통망법명예훼손": "구조: [매체+열람 가능 인원] → [게시 내용] → [사실/허위 여부] → [결어: 비방할 목적으로 정보통신망을 통하여 공공연하게 (허위의) 사실을 드러내어 명예를 훼손하였다].",
-  "사문서위조": "구조: [행사할 목적이 있었다는 서두] → [위조 대상 문서의 종류·명의자] → [위조 행위: 언제 어디서 어떤 방법으로(예: 명의자 도장을 임의로 날인, 서명을 임의로 기재 등) 문서를 작성하였는지 구체적으로] → [결어: 이로써 피의자는 행사할 목적으로 사문서인 OOO 명의의 △△를 위조하였다]. 위조란 작성권한 없는 자가 타인 명의를 임의로 사용해 문서를 작성하는 것이므로, 명의자 본인의 동의·위임이 없었다는 점을 반드시 명시할 것.",
+  "사문서위조": "구조: [피의자와 피해자(명의자)의 관계·지위 서두 - 원자료에 확인되면 반드시 포함: 예) '피의자는 피해자로부터 ○○년경 ~을 계기로 알게 된 부동산 중개업자(△△업체 대표)이다'] → [행사할 목적이 있었다는 서두] → [위조 대상 문서의 종류·명의자] → [위조 행위: 언제 어디서 어떤 방법으로(예: 명의자 도장을 임의로 날인, 서명을 임의로 기재 등) 문서를 작성하였는지 구체적으로] → [결어: 이로써 피의자는 행사할 목적으로 사문서인 OOO 명의의 △△를 위조하였다]. 위조란 작성권한 없는 자가 타인 명의를 임의로 사용해 문서를 작성하는 것이므로, 명의자 본인의 동의·위임이 없었다는 점을 반드시 명시할 것.",
   "위조사문서행사": "구조: [위조된 문서라는 인식이 있었다는 전제] → [행사 행위: 언제 어디서 누구에게 그 위조 문서를 제시·제출·교부하였는지] → [그 행사로 인한 결과(있다면)] → [결어: 이로써 피의자는 위와 같이 위조된 사문서를 행사하였다]. 통상 사문서위조와 함께 기재되며(위조 후 그 문서를 실제로 사용한 행위), 위조 시점과 행사 시점이 다르면 각각 구분해서 명시할 것.",
 };
 
@@ -1059,6 +1190,7 @@ function buildFactPrompt() {
 "[문형 지침 - 세 버전 공통]\n" + PATTERN_GUIDE[state.crimeType] + "\n\n" +
 "[공통 작성 규칙]\n" +
 "- 감정적·주관적 표현 금지, 사실관계만 서술\n" +
+"- 첫 문장(또는 그 직후)에서 피의자와 고소인/피해자 사이의 관계, 또는 피의자의 지위·직업을 원자료에서 확인되는 대로 반드시 먼저 밝힐 것 (예: '피의자는 피해자와 2018년경 고등학교 동창으로 알게 된 사이이다', '피의자는 부동산 중개업자로서 ○○업체 대표이다', '피의자는 ~업무를 담당하는 자이다' 등). 이 정보가 원자료에 있는데도 생략하고 바로 행위 서술로 들어가지 말 것 — 관계·지위는 범죄사실의 배경으로서 다른 문형 요소만큼 중요함\n" +
 "- 피해금액·이득액 처리: 고소인/피해자 본인이 이 사건 피해액으로 직접 진술한 금액은, 설령 본인이 '추정치다', '정확한 건 아니다'라고 밝혔더라도 그 금액을 그대로 'OO원 상당'으로 범죄사실에 기재할 것 — 빈칸으로 비우지 말 것. 원자료에 그 금액을 추정할 어떤 숫자도 전혀 없는 경우에만 [ ]원으로 비워둘 것. (사기·횡령·배임 모두 피해금액은 핵심 요건이므로, 고소인이 밝힌 금액을 근거로 기재하는 것이 원칙)\n" +
 "- 실명 대신 '피의자', '피해자' 호칭 사용\n" +
 crimeSpecificRules(state.crimeType) + "\n" +
@@ -1097,23 +1229,21 @@ function renderSuspects() {
   const wrap = document.getElementById("suspectsWrap");
   wrap.innerHTML = "";
   state.suspects.forEach((s) => {
+    if (!s.crimeTypes) {
+      s.crimeTypes = s.crimeType ? { [s.crimeType]: true } : {};
+      delete s.crimeType;
+    }
+    const card = document.createElement("div");
+    card.className = "card";
+
     const row = document.createElement("div");
     row.className = "row-inline";
+    row.style.marginBottom = "10px";
     const nameInput = document.createElement("input");
     nameInput.type = "text";
     nameInput.placeholder = "피의자 이름 (성명불상이면 비워두세요)";
     nameInput.value = s.name;
     nameInput.oninput = () => { s.name = nameInput.value; renderSuspectStatementItems(); };
-    const crimeSelect = document.createElement("select");
-    crimeSelect.style.flex = "0 0 180px";
-    CRIME_TYPES.forEach(c => {
-      const opt = document.createElement("option");
-      opt.value = c.id;
-      opt.textContent = c.label;
-      if (c.id === s.crimeType) opt.selected = true;
-      crimeSelect.appendChild(opt);
-    });
-    crimeSelect.onchange = () => s.crimeType = crimeSelect.value;
     const delBtn = document.createElement("button");
     delBtn.className = "btn ghost";
     delBtn.textContent = "삭제";
@@ -1125,13 +1255,34 @@ function renderSuspects() {
       renderSuspectStatementItems();
     };
     row.appendChild(nameInput);
-    row.appendChild(crimeSelect);
     row.appendChild(delBtn);
-    wrap.appendChild(row);
+
+    const crimeLabel = document.createElement("div");
+    crimeLabel.className = "hint";
+    crimeLabel.style.margin = "0 0 6px 0";
+    crimeLabel.textContent = "이 사람에게 해당하는 죄명 (한 명이 여러 죄명일 수 있어요, 여러 개 선택 가능):";
+
+    const pillRow = document.createElement("div");
+    CRIME_TYPES.forEach(c => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "pill" + (s.crimeTypes[c.id] ? " active" : "");
+      b.textContent = c.label;
+      b.onclick = () => {
+        s.crimeTypes[c.id] = !s.crimeTypes[c.id];
+        b.classList.toggle("active");
+      };
+      pillRow.appendChild(b);
+    });
+
+    card.appendChild(row);
+    card.appendChild(crimeLabel);
+    card.appendChild(pillRow);
+    wrap.appendChild(card);
   });
 }
 function addSuspect() {
-  state.suspects.push({ id: "sp_" + Date.now() + Math.random(), name: "", crimeType: "사기" });
+  state.suspects.push({ id: "sp_" + Date.now() + Math.random(), name: "", crimeTypes: { "사기": true } });
   renderSuspects();
 }
 document.getElementById("btnAddSuspect").onclick = addSuspect;
@@ -1140,7 +1291,8 @@ function suspectsSummary(masked) {
   return state.suspects.map(s => {
     const name = s.name || "성명불상";
     const displayName = (masked && document.getElementById("piiAutoMask").checked) ? getOrCreateToken(name, "성명") : name;
-    return displayName + "(" + s.crimeType + ")";
+    const crimes = CRIME_TYPES.filter(c => s.crimeTypes && s.crimeTypes[c.id]).map(c => c.label).join(", ") || "죄명 미지정";
+    return displayName + "(" + crimes + ")";
   }).join(", ");
 }
 
@@ -1744,7 +1896,9 @@ function collectAllTextFields() {
     "prepComplaintText","prepStatementText","prepAnswer",
     "multiSuspectComplaintText","multiSuspectStatementText","multiSuspectAnswer",
     "multiCrimeComplaintText2","multiCrimeStatementText2","multiCrimeAnswer2",
-    "crimeListComplaintText","crimeListStatementText","crimeListAnswer"
+    "crimeListComplaintText","crimeListStatementText","crimeListAnswer",
+    "victimPrepComplaintText","victimPrepAnswer",
+    "dismissSuspectNames","dismissCrimeName","dismissComplaintText","dismissStatementText","dismissSuspectStatementText","dismissReportText","dismissPriorDecision","dismissAttendanceHistory","dismissJustification","dismissGongsoReason","dismissAnswer"
   ];
   const fields = {};
   ids.forEach(id => {
@@ -1753,10 +1907,13 @@ function collectAllTextFields() {
   });
   fields.decision = document.getElementById("decision").value;
   fields.piiAutoMask = document.getElementById("piiAutoMask").checked;
-  fields.prepCrimeType = prepCrimeType;
+  fields.prepCrimeTypes = prepCrimeTypes;
   fields.multiSuspectNames = multiSuspectNames;
   fields.multiCrimeSelected2 = multiCrimeSelected2;
   fields.crimeListAccountMode = crimeListAccountMode;
+  fields.victimPrepCrimeTypes = victimPrepCrimeTypes;
+  fields.dismissReason = dismissReason;
+  fields.dismissType = dismissType;
   fields.piiMaskMap = piiMaskMap;
   return fields;
 }
@@ -1813,8 +1970,8 @@ function applyLoadedData(data) {
   document.querySelectorAll(".mode-btn").forEach(b => b.classList.toggle("active", b.dataset.mode === state.caseMode));
   updateCaseModeUI();
 
-  if (data.fields && data.fields.prepCrimeType) {
-    prepCrimeType = data.fields.prepCrimeType;
+  if (data.fields && data.fields.prepCrimeTypes) {
+    prepCrimeTypes = data.fields.prepCrimeTypes;
   }
   renderPrepCrimePills();
 
@@ -1834,6 +1991,25 @@ function applyLoadedData(data) {
       b.classList.toggle("active", b.dataset.accountmode === crimeListAccountMode);
     });
   }
+
+  if (data.fields && data.fields.victimPrepCrimeTypes) {
+    victimPrepCrimeTypes = data.fields.victimPrepCrimeTypes;
+  }
+  renderVictimPrepCrimePills();
+
+  if (data.fields && data.fields.dismissType) {
+    dismissType = data.fields.dismissType;
+    document.querySelectorAll("#dismissTypeRow .acct-btn").forEach(b => {
+      b.classList.toggle("active", b.dataset.type === dismissType);
+    });
+  }
+  if (data.fields && data.fields.dismissReason) {
+    dismissReason = data.fields.dismissReason;
+    document.querySelectorAll("#dismissReasonRow .acct-btn").forEach(b => {
+      b.classList.toggle("active", b.dataset.reason === dismissReason);
+    });
+  }
+  updateDismissTypeUI();
 
   renderSuspects();
   renderComplaintItems();
@@ -1885,18 +2061,17 @@ document.getElementById("btnResetAll").onclick = () => {
 };
 
 // ===================== 탭3: 피의자신문조서 준비 (완전 독립, 2번 탭 데이터 미사용) =====================
-let prepCrimeType = "사기";
+let prepCrimeTypes = { "사기": true };
 function renderPrepCrimePills() {
   const container = document.getElementById("crime-pills-prep");
   container.innerHTML = "";
   CRIME_TYPES.forEach(c => {
     const b = document.createElement("button");
-    b.className = "pill" + (c.id === prepCrimeType ? " active" : "");
+    b.className = "pill" + (prepCrimeTypes[c.id] ? " active" : "");
     b.textContent = c.label;
     b.onclick = () => {
-      prepCrimeType = c.id;
-      document.querySelectorAll("#crime-pills-prep .pill").forEach(p => p.classList.remove("active"));
-      b.classList.add("active");
+      prepCrimeTypes[c.id] = !prepCrimeTypes[c.id];
+      b.classList.toggle("active");
       refreshPrepPrompt();
     };
     container.appendChild(b);
@@ -1909,13 +2084,18 @@ attachImageHelperById("prepStatementText");
 function buildInterrogationPrepPrompt() {
   const complaintText = maskPII(document.getElementById("prepComplaintText").value);
   const statementText = maskPII(document.getElementById("prepStatementText").value);
-  const guide = PATTERN_GUIDE[prepCrimeType] || "";
+  const selectedCrimes = CRIME_TYPES.filter(c => prepCrimeTypes[c.id]);
+  if (selectedCrimes.length === 0) {
+    return "먼저 위에서 해당하는 죄명을 하나 이상 체크해주세요.";
+  }
+  const crimeLabels = selectedCrimes.map(c => c.label).join(", ");
+  const guide = selectedCrimes.map(c => "- " + c.label + ": " + PATTERN_GUIDE[c.id]).join("\n");
 
-  return "너는 대한민국 경찰 수사관의 피의자신문 준비를 돕는 어시스턴트야. 아래 자료를 바탕으로, '" + prepCrimeType + "' 혐의 피의자를 조사하기 전에 준비해야 할 사항을 정리해줘.\n\n" +
-"[이 죄종의 구성요건 구조 - 참고]\n" + guide + "\n\n" +
+  return "너는 대한민국 경찰 수사관의 피의자신문 준비를 돕는 어시스턴트야. 아래 자료를 바탕으로, '" + crimeLabels + "' 혐의(하나의 사건에서 여러 죄명이 함께 문제되는 경우 포함) 피의자를 조사하기 전에 준비해야 할 사항을 정리해줘.\n\n" +
+"[관련 죄종들의 구성요건 구조 - 참고]\n" + guide + "\n\n" +
 "[출력 형식 - 반드시 이 3항목으로 구성]\n" +
 "1. 필수질문\n" +
-"   - 이 죄종의 구성요건(예: 기망행위, 편취범의, 임무위배, 보관관계 등)을 하나하나 확인할 수 있는 질문을 문답형으로 제시할 것 (예: \"문: ~에 대해 어떻게 생각하십니까?\")\n" +
+"   - 위에 나열된 죄명 각각의 구성요건(예: 기망행위, 편취범의, 임무위배, 보관관계, 위조 인식 등)을 하나하나 확인할 수 있는 질문을 문답형으로 제시할 것 (예: \"문: ~에 대해 어떻게 생각하십니까?\"). 죄명이 여러 개면 죄명별로 구분해서 질문을 정리할 것\n" +
 "   - 고소장과 진술조서 사이에 서로 다르거나 애매한 부분이 있으면, 그 지점을 짚어서 확인하는 질문도 포함할 것\n" +
 "   - 진술거부권 등 절차적 고지사항은 생략(이미 별도 진행 전제)하고, 실질 조사 질문 위주로 작성할 것\n\n" +
 "2. 받아야 할 자료\n" +
@@ -1939,8 +2119,9 @@ refreshPrepPrompt();
 
 document.getElementById("prepDownloadWrap").appendChild(
   makeDownloadButton("저장 (다운로드, .docx)", () => {
+    const crimeLabels = CRIME_TYPES.filter(c => prepCrimeTypes[c.id]).map(c => c.label).join(", ");
     const body = document.getElementById("prepAnswer").value;
-    return "피의자신문조서 준비 — " + prepCrimeType + "\n\n" + body;
+    return "피의자신문조서 준비 — " + crimeLabels + "\n\n" + body;
   }, "피의자신문조서_준비")
 );
 
@@ -2065,6 +2246,7 @@ function buildMultiSuspectFactPrompt() {
 "[공통 작성 규칙]\n" +
 "- 각 버전 안에서 각 항목은 하나의 죄명에 대한 것이어야 하며, 위 매핑에서 그 죄명에 연결된 피의자만 다룰 것 (매핑에 없는 피의자를 등장시키지 말 것)\n" +
 "- 매핑에 있는 피의자인데 원자료에서 전혀 언급을 찾을 수 없다면, 본문 뒤에 '[원자료에서 확인 안 됨: 이름]'이라고 표시할 것\n" +
+"- 각 항목 시작 부분에서, 원자료에서 확인되는 피의자와 고소인/피해자의 관계 또는 피의자의 지위·직업을 먼저 밝힐 것 (예: '피의자 OOO는 피해자와 ~관계이다', '피의자 OOO는 ~업무를 담당하는 자이다'). 생략하지 말 것\n" +
 "- 각 피의자는 위 매핑의 이름(또는 아래 원자료에 나오는 [성명NN] 같은 표시)을 그대로 사용해서 구분 표기, 피해자는 '피해자'로 통일\n" +
 "- 피해금액·이득액은 고소인이 진술한 금액을 그대로 사용하고(추정치라도 빈칸 처리하지 말 것), 원자료에 전혀 없는 경우만 [ ]로 비워둘 것\n" +
 "- 판례·법조문은 인용하지 말 것\n" +
@@ -2119,6 +2301,7 @@ function buildMultiCrimeFactPrompt2() {
   return "너는 대한민국 경찰 수사서류 작성을 돕는 어시스턴트야. 아래 자료는 피의자 한 명이 여러 범행(여러 죄명)을 저지른 사건이야. 선택된 죄명에 해당하는 내용을 찾아서, 죄명별로 '" + labels[0] + ".', '" + labels[1] + ".'... 항목으로 나눠 각각 완결된 범죄사실을 공문서체(\"~하였다\")로 작성해줘.\n\n" +
 "[작성 규칙]\n" +
 "- 각 항목은 하나의 죄명에 대한 완결된 범죄사실이어야 하고, 전부 같은 피의자 한 명을 기준으로 작성할 것\n" +
+"- 각 항목 시작 부분에서, 원자료에서 확인되는 피의자와 고소인/피해자의 관계 또는 피의자의 지위·직업을 먼저 밝힐 것 (예: '피의자는 피해자와 ~관계이다', '피의자는 ~업무를 담당하는 자이다'). 여러 항목에 걸쳐 같은 피해자·관계라면 반복 서술하지 않아도 되나, 항목마다 피해자가 다르면 각 항목에서 새로 밝힐 것\n" +
 "- 실명 대신 '피의자', '피해자' 호칭 사용 (피해자가 여러 명이면 '피해자 1', '피해자 2' 등으로 구분)\n" +
 "- 피해금액·이득액은 고소인이 진술한 금액을 그대로 사용하고(추정치라도 빈칸 처리하지 말 것), 원자료에 전혀 없는 경우만 [ ]로 비워둘 것\n" +
 "- 판례·법조문은 인용하지 말 것\n" +
@@ -2300,6 +2483,222 @@ document.getElementById("btnDownloadCrimeListTable").onclick = () => {
   renderTablePreview(rows);
   downloadTableAsDocx(rows, "범죄일람표_" + timestampStr());
 };
+
+// ===================== 탭7: 고소인 조사 준비 (완전 독립) =====================
+let victimPrepCrimeTypes = { "사기": true };
+function renderVictimPrepCrimePills() {
+  const container = document.getElementById("crime-pills-victimprep");
+  container.innerHTML = "";
+  CRIME_TYPES.forEach(c => {
+    const b = document.createElement("button");
+    b.className = "pill" + (victimPrepCrimeTypes[c.id] ? " active" : "");
+    b.textContent = c.label;
+    b.onclick = () => {
+      victimPrepCrimeTypes[c.id] = !victimPrepCrimeTypes[c.id];
+      b.classList.toggle("active");
+      refreshVictimPrepPrompt();
+    };
+    container.appendChild(b);
+  });
+}
+renderVictimPrepCrimePills();
+attachRestoreButton("victimPrepAnswer");
+
+function buildVictimPrepPrompt() {
+  const complaintText = maskPII(document.getElementById("victimPrepComplaintText").value);
+  const selectedCrimes = CRIME_TYPES.filter(c => victimPrepCrimeTypes[c.id]);
+  if (selectedCrimes.length === 0) {
+    return "먼저 위에서 해당하는 죄명을 하나 이상 체크해주세요.";
+  }
+  const crimeLabels = selectedCrimes.map(c => c.label).join(", ");
+  const guide = selectedCrimes.map(c => "- " + c.label + ": " + PATTERN_GUIDE[c.id]).join("\n");
+  return "너는 대한민국 경찰 수사관의 고소인/참고인 진술조서 청취 준비를 돕는 어시스턴트야. 아래 고소장/진정서/고발장을 바탕으로, '" + crimeLabels + "' 혐의(하나의 사건에서 여러 죄명이 함께 문제되는 경우 포함) 고소인을 조사(진술조서 작성)하기 전에 준비해야 할 사항을 정리해줘.\n\n" +
+"[관련 죄종들의 구성요건 구조 - 참고]\n" + guide + "\n\n" +
+"[출력 형식 - 반드시 이 3항목으로 구성]\n" +
+"1. 필수질문\n" +
+"   - 위에 나열된 죄명 각각의 구성요건을 하나하나 확인할 수 있는 질문을 문답형으로 제시할 것 (예: \"문: ~에 대해 자세히 말씀해주시겠습니까?\"). 죄명이 여러 개면 죄명별로 구분해서 질문을 정리할 것\n" +
+"   - 고소장 내용 중 애매하거나, 구체적 일시·금액·경위가 빠져있어 진술을 통해 보충해야 할 부분을 짚어서 질문에 포함할 것\n" +
+"   - 피의자 특정에 필요한 정보(이름, 연락처, 계좌, 만난 장소 등)를 확인하는 질문도 포함할 것\n\n" +
+"2. 받아야 할 자료\n" +
+"   - 고소인에게 요청해서 확보해야 할 구체적 증거자료를 나열할 것 (예: 계좌이체 내역, 대화 캡처, 계약서, 녹취 등)\n" +
+"   - 고소장에 이미 언급된 자료와, 아직 언급 안 됐지만 확보하면 좋을 자료를 구분해서 표시할 것\n\n" +
+"3. 조사 전 미리 알아야 할 정보\n" +
+"   - 고소장 내용의 핵심 일시·금액·행위를 간단히 정리\n" +
+"   - 고소장 자체에서 앞뒤가 안 맞거나 애매한 부분이 있다면 미리 정리\n" +
+"   - 각 죄종 성립을 위해 진술을 통해 반드시 확정지어야 할 핵심 쟁점이 무엇인지 제안 (판례를 확정적으로 인용하지 말고, 어떤 키워드로 검색해보면 좋을지 제안하는 정도로)\n\n" +
+"[고소장/진정서/고발장 내용]\n" + (complaintText || "(없음)") + "\n\n" +
+"위 자료로 고소인/참고인 진술조서 청취 준비사항을 1, 2, 3 항목으로 작성해줘.";
+}
+
+function refreshVictimPrepPrompt() {
+  const wrap = document.getElementById("promptVictimPrepWrap");
+  wrap.innerHTML = "";
+  wrap.appendChild(makePromptExport("AI에게 고소인 조사 준비사항 물어보기", buildVictimPrepPrompt));
+}
+refreshVictimPrepPrompt();
+
+document.getElementById("victimPrepDownloadWrap").appendChild(
+  makeDownloadButton("저장 (다운로드, .docx)", () => {
+    const body = document.getElementById("victimPrepAnswer").value;
+    const crimeLabels = CRIME_TYPES.filter(c => victimPrepCrimeTypes[c.id]).map(c => c.label).join(", ");
+    return "고소인 조사 준비 — " + crimeLabels + "\n\n" + body;
+  }, "고소인조사_준비")
+);
+
+// ===================== 탭8: 불송치 결정서 작성 (완전 독립, 5개 유형 통합) =====================
+let dismissType = "hyeuiA";
+let dismissReason = "ga";
+
+const DISMISS_TYPE_VERDICT = {
+  hyeuiA: "증거불충분과 무관하게, 피의사실 자체가 죄명의 구성요건에 해당하지 않거나 범죄가 인정되지 않아 '혐의없다'",
+  hyeuiB: "'증거 불충분하여 혐의없다'",
+  joega: "'죄가 되지 아니한다'",
+  gongso: "'공소권없다'",
+  gakha: "'각하한다'",
+};
+
+const DISMISS_TYPE_GUIDE = {
+  hyeuiA: "혐의없음(범죄인정안됨): 피의사실 자체(고소인 주장을 그대로 인정하더라도)가 애초에 해당 죄명의 구성요건에 해당하지 않거나 처벌 규정이 없는 경우. 사실관계 다툼(고소인 vs 피의자 주장 대립) 구조 없이, '~한 사실은 인정된다' 한 줄 다음 바로 '~하는 행위를 처벌하는 규정이 없다/구성요건에 해당하지 않는다'는 법리를 쓰고 '범죄 인정되지 아니하여 혐의없다'로 끝맺을 것. 고소인 주장·피의자 변명을 나눠 쓸 필요가 원칙적으로 없음(사실관계 자체는 다툼이 없는 경우가 대부분이므로).",
+  hyeuiB: "혐의없음(증거불충분): 사실관계(고소인 주장 vs 피의자 변명)가 다투어지는 경우. 순서: ①(일부라도 인정되는 사실이 있으면 먼저) 인정되는 사실 ②고소인 등의 주장 요지(부합하는 증거) ③피의자의 변명 요지(부합하는 증거) ④고소인 주장에 배치되는 증거 및 그 배척 이유 ⑤'달리 피의사실을 인정할 증거가 없다' ⑥'증거불충분하여 혐의없다'. 피의자가 전부 부인하면 ①(인정되는 사실)은 생략 가능.",
+  joega: "죄가안됨: 구성요건에 해당하는 행위는 있었으나 위법성조각사유(정당방위·정당행위·피해자승낙·긴급피난 등)나 책임조각사유가 있는 경우. 순서: ①인정되는 사실(구성요건 사실) ②위법성·책임조각의 기초사실을 인정할 수 있는 근거(증거) ③'~에 해당한다'는 결정논거 ④'죄가 되지 아니한다'. 법률적 설명을 장황하게 쓰지 말고 간결하게.",
+  gongso: "공소권없음: 소추요건 흠결 또는 형의 필요적 면제사유가 있는 경우(피의자 사망, 공소시효 완성, 친고죄 고소기간 경과, 반의사불벌죄 처벌불원 등). 순서: ①인정되는 사실(구성요건 사실, 필요한 경우) ②공소권없음의 근거가 되는 법정사유 ③'공소권없다'. ⚠ 사망 등 민감한 사유는 원인·경위를 구체적으로 쓰지 말고 '피의자가 OOOO. OO. OO. 사망하였다(기록 제O쪽 사망진단서)' 정도로만 간략히 쓸 것 — 유족 이의제기·2차 피해 우려.",
+  gakha: "각하: 고소인 등의 주장만으로도 수사할 가치가 없음이 명백한 경우. 순서: ①고소인 등이 주장하는 사실(그대로 기재) ②각하 결정 논거(각하 사유 해당 근거) ③'각하한다'. ⚠ 매우 중요: 각하는 피의자 또는 참고인을 조사하지 않은 경우에만 가능한 유형임. 만약 아래 자료에 피의자신문조서 내용이 실질적으로 들어있다면, 이미 조사가 이루어져 사건의 실체에 들어간 것이므로 각하가 아니라 혐의없음 등 종국결정으로 가야 한다는 점을 반드시 '[검토 의견]'으로 지적할 것.",
+};
+
+function updateDismissTypeUI() {
+  const isGakha = dismissType === "gakha";
+  document.getElementById("dismissReasonWrap").style.display = isGakha ? "block" : "none";
+  document.getElementById("dismissGakhaMaterialsWrap").style.display = isGakha ? "block" : "none";
+  document.getElementById("dismissReportWrap").style.display = isGakha ? "none" : "block";
+  document.getElementById("dismissJoegaWrap").style.display = dismissType === "joega" ? "block" : "none";
+  document.getElementById("dismissGongsoWrap").style.display = dismissType === "gongso" ? "block" : "none";
+  updateDismissReasonUI();
+  checkGakhaSuspectStatementWarning();
+}
+document.querySelectorAll("#dismissTypeRow .acct-btn").forEach(btn => {
+  btn.onclick = () => {
+    dismissType = btn.dataset.type;
+    document.querySelectorAll("#dismissTypeRow .acct-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    updateDismissTypeUI();
+    refreshDismissPrompt();
+  };
+});
+
+function checkGakhaSuspectStatementWarning() {
+  const warnEl = document.getElementById("dismissGakhaWarning");
+  if (dismissType !== "gakha") { warnEl.style.display = "none"; return; }
+  const hasSuspectStatement = document.getElementById("dismissSuspectStatementText").value.trim().length > 0;
+  if (hasSuspectStatement) {
+    warnEl.style.display = "block";
+    warnEl.textContent = "⚠ 피의자신문조서 내용이 입력되어 있어요. 각하는 피의자·참고인을 조사하지 않은 경우에만 가능한 유형인데, 이미 조사가 이루어진 상태로 보여요. 각하 대신 혐의없음 등 종국결정으로 진행하는 게 맞는지 다시 확인해주세요.";
+  } else {
+    warnEl.style.display = "none";
+  }
+}
+document.getElementById("dismissSuspectStatementText").addEventListener("input", checkGakhaSuspectStatementWarning);
+
+function updateDismissReasonUI() {
+  document.getElementById("dismissNaWrap").style.display = (dismissType === "gakha" && dismissReason === "na") ? "block" : "none";
+  document.getElementById("dismissDaWrap").style.display = (dismissType === "gakha" && dismissReason === "da") ? "block" : "none";
+}
+document.querySelectorAll("#dismissReasonRow .acct-btn").forEach(btn => {
+  btn.onclick = () => {
+    dismissReason = btn.dataset.reason;
+    document.querySelectorAll("#dismissReasonRow .acct-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    updateDismissReasonUI();
+    refreshDismissPrompt();
+  };
+});
+updateDismissTypeUI();
+
+const DISMISS_REASON_TEXT = {
+  ga: "고소인 또는 고발인의 진술이나 고소장 또는 고발장에 따라 혐의없음(범죄인정안됨·증거불충분)·죄가안됨·공소권없음 등에 해당함이 명백하여 더 이상 수사를 진행할 필요가 없다고 판단되는 경우 (경찰수사규칙 제108조제1항마목 가.)",
+  na: "동일사건에 대하여 사법경찰관의 불송치 또는 검사의 불기소가 있었던 사실이 있고, 새로운 증거 없이 다시 수사해도 동일하게 결정될 것이 명백한 경우 (경찰수사규칙 제108조제1항마목 나.)",
+  da: "고소인 또는 고발인이 고소·고발장을 제출한 후 출석요구·자료제출 요청 등에 불응하거나 소재가 확인되지 않아 수사를 개시·진행할 구체적 근거가 없는 경우 (경찰수사규칙 제108조제1항마목 다.)",
+};
+
+function buildDismissPrompt() {
+  const suspectNames = document.getElementById("dismissSuspectNames").value.trim() || "(피의자 이름 미입력)";
+  const crimeName = document.getElementById("dismissCrimeName").value.trim() || "(죄명 미입력)";
+
+  const commonStructure =
+"[전체 문서 구조 - 반드시 이 형식 그대로]\n" +
+"I. 피의자\n(피의자 이름을 번호 매겨 나열. 공모관계면 '피의자들은 ~공모하여'로 이후 서술)\n\n" +
+"II. 죄명\n(죄명)\n\n" +
+"III. 주문\n(피의자(들)은/는 " + DISMISS_TYPE_VERDICT[dismissType] + " 형태로 작성)\n\n" +
+"IV. 피의사실과 불송치 이유\n(이 부분이 핵심. 첫 줄에 압축된 피의사실 한 문장을 쓰고 — 일자는 연월일까지만, 시·분과 장소·동기·수단·방법은 다른 사건과 구분에 필요한 경우가 아니면 생략, 피의자 이름은 공모관계 표시가 필요한 경우가 아니면 원칙적으로 안 씀 — 그 다음 위 [적용하려는 불송치 유형과 작성 방식]에 명시된 순서대로 불릿(○)을 이어서 쓸 것. '피의사실'과 '이유'를 별도 항목으로 나누지 말고 하나로 통합해서 쓸 것)\n\n" +
+"[공통 작성 규칙]\n" +
+"- 감정적 표현 없이 공문서체로 작성할 것\n" +
+"- 판례·법조문은 인용하지 말 것\n";
+
+  if (dismissType === "gakha") {
+    const complaintText = maskPII(document.getElementById("dismissComplaintText").value);
+    const statementText = maskPII(document.getElementById("dismissStatementText").value);
+    const suspectStatementText = maskPII(document.getElementById("dismissSuspectStatementText").value);
+    const priorDecision = maskPII(document.getElementById("dismissPriorDecision").value);
+    const attendanceHistory = maskPII(document.getElementById("dismissAttendanceHistory").value);
+
+    let extraContext = "";
+    if (dismissReason === "na") {
+      extraContext = "[이전 불송치/불기소 결정 내용]\n" + (priorDecision || "(입력 없음 — 이 정보 없이는 '나' 사유를 명백하다고 단정하기 어려우니, 정보가 부족하면 그 점을 지적할 것)") + "\n\n";
+    } else if (dismissReason === "da") {
+      extraContext = "[출석요구 이력]\n" + (attendanceHistory || "(입력 없음 — 이 정보 없이는 '다' 사유를 명백하다고 단정하기 어려우니, 정보가 부족하면 그 점을 지적할 것)") + "\n\n";
+    }
+
+    return "너는 대한민국 경찰 수사관의 불송치 결정서(각하) 작성을 돕는 어시스턴트야. 각하는 실체 조사 이전, 고소장 단계에서 바로 끝내는 절차이므로 아래 원자료만으로 판단해줘. 피의자 '" + suspectNames + "', 죄명 '" + crimeName + "' 사건이야.\n\n" +
+"[적용하려는 불송치 유형과 작성 방식]\n" + DISMISS_TYPE_GUIDE.gakha + "\n\n" +
+"[적용하려는 각하 사유]\n" + DISMISS_REASON_TEXT[dismissReason] + "\n\n" +
+commonStructure +
+"- 인정되는 사실(고소인 주장)은 실제 원자료(고소장·고소인 진술)의 내용을 근거로, 추상적으로 쓰지 말고 구체적으로 서술할 것\n" +
+"- 원자료만으로 각하가 실제로 타당한지 스스로 검토할 것. 자료가 부족하거나 다른 유형이 더 적절해 보이면, 초안 마지막에 '[검토 의견]'을 별도로 만들어 그 우려를 명확히 밝힐 것 — 무리하게 결론짓지 말 것\n" +
+"- ⚠ 매우 중요: 아래 [피의자신문조서 내용]에 실질적인 내용이 있다면, 이미 조사가 이루어져 사건의 실체에 들어간 것이므로 각하가 아니라 혐의없음 등 종국결정으로 가야 한다는 점을 반드시 '[검토 의견]'으로 지적할 것\n\n" +
+extraContext +
+"[고소장/진정서/고발장 내용]\n" + (complaintText || "(없음)") + "\n\n" +
+"[고소인/고발인 진술 내용]\n" + (statementText || "(없음)") + "\n\n" +
+"[피의자신문조서 내용]\n" + (suspectStatementText || "(없음)") + "\n\n" +
+"위 자료로 불송치 결정서(각하) 초안을 작성해줘.";
+  }
+
+  // 각하 이외 4개 유형: ⑦ 수결 탭 최종 보고서를 압축·재구성
+  const reportText = maskPII(document.getElementById("dismissReportText").value);
+  const justification = maskPII(document.getElementById("dismissJustification").value);
+  const gongsoReason = maskPII(document.getElementById("dismissGongsoReason").value);
+
+  let extraContext = "";
+  if (dismissType === "joega") {
+    extraContext = justification ? "[위법성조각·책임조각 관련 추가 강조사항]\n" + justification + "\n\n" : "";
+  } else if (dismissType === "gongso") {
+    extraContext = gongsoReason ? "[공소권없음 법정사유 추가 강조사항]\n" + gongsoReason + "\n\n" : "";
+  }
+
+  return "너는 대한민국 경찰 수사관의 불송치 결정서 작성을 돕는 어시스턴트야. 아래는 이미 완성된 최종 수사결과보고서(가.인정되는 사실/나.쟁점/판례/의견)야. 여기서 사실관계를 새로 재분석하지 말고, 이미 내려진 결론을 그대로 가져와서 불송치 결정서 형식으로 압축·재구성만 해줘. 피의자 '" + suspectNames + "', 죄명 '" + crimeName + "' 사건이야.\n\n" +
+"[적용하려는 불송치 유형과 작성 방식]\n" + DISMISS_TYPE_GUIDE[dismissType] + "\n\n" +
+commonStructure +
+"- 아래 [최종 수사결과보고서]에 있는 인정사실·쟁점(고소인 주장/피의자 주장/검토)·의견을 그대로 근거로 사용할 것. 보고서에 없는 새로운 사실을 지어내지 말 것\n" +
+"- 보고서의 결론(의견)이 지금 선택된 유형과 실제로 맞는지 스스로 검토할 것. 안 맞아 보이면 초안 마지막에 '[검토 의견]'으로 그 불일치를 지적할 것 — 무리하게 끼워맞추지 말 것\n" +
+"- 보고서 내용이 지금 유형 판단에 필요한 정보(예: 죄가안됨의 위법성조각 근거, 공소권없음의 법정사유)를 충분히 담고 있지 않다면, 그 점도 '[검토 의견]'으로 지적할 것\n\n" +
+extraContext +
+"[최종 수사결과보고서]\n" + (reportText || "(없음 — ⑦ 수결 작성 탭에서 만든 최종 보고서를 붙여넣어주세요)") + "\n\n" +
+"위 자료로 불송치 결정서 초안을 작성해줘.";
+}
+
+function refreshDismissPrompt() {
+  const wrap = document.getElementById("promptDismissWrap");
+  wrap.innerHTML = "";
+  wrap.appendChild(makePromptExport("AI에게 불송치 결정서 물어보기", buildDismissPrompt));
+}
+refreshDismissPrompt();
+attachRestoreButton("dismissAnswer");
+
+document.getElementById("dismissDownloadWrap").appendChild(
+  makeDownloadButton("저장 (다운로드, .docx)", () => {
+    const crimeName = document.getElementById("dismissCrimeName").value.trim() || "(죄명 미입력)";
+    const body = document.getElementById("dismissAnswer").value;
+    return "불송치 결정서 — " + crimeName + "\n\n" + body;
+  }, "불송치결정서")
+);
 
 // ===================== 초기 렌더 =====================
 renderSuspects();
