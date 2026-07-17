@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>수사 도움 프로그램 다운로드</title>
+<style>
+  :root {
+    --ink: #1C2530;
+    --paper: #F6F4EF;
+    --line: #D9D4C7;
+    --seal: #7A2E2E;
+    --muted: #7C7566;
+    --accent: #35506B;
+    --field: #FBFAF7;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  }
+  header {
+    border-bottom: 2px solid var(--ink);
+    padding: 28px 32px 20px;
+  }
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--seal);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  h1 {
+    font-size: 26px;
+    font-weight: 800;
+    font-family: Georgia, serif;
+    margin: 0;
+  }
+  .sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .backlink {
+    display: inline-block;
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  main {
+    padding: 28px 32px 60px;
+    max-width: 900px;
+  }
+  .warn-box {
+    background:#FCEBEB; border:1px solid #E24B4A; border-radius:4px; padding:14px 16px;
+    margin-bottom: 28px; font-size:13px; line-height:1.7; color:#501313;
+  }
+  .card {
+    background: var(--field);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px 24px;
+    margin-bottom: 20px;
+  }
+  .card h2 {
+    font-size: 18px;
+    margin: 0 0 6px;
+    font-family: Georgia, serif;
+  }
+  .card .meta {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .card ul {
+    font-size: 13.5px;
+    line-height: 1.8;
+    margin: 10px 0 16px;
+    padding-left: 20px;
+  }
+  .btn {
+    background: var(--ink);
+    color: var(--paper);
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    padding: 10px 20px;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn.seal { background: var(--seal); border-color: var(--seal); }
+  .empty-note {
+    font-size: 13px;
+    color: var(--muted);
+    padding: 20px 0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">PROTOTYPE · 자체 제작 도구 모음</div>
+  <h1>수사 도움 프로그램 다운로드</h1>
+  <div class="sub">개인적으로 만들어본 프로그램들을 모아두는 곳입니다. 필요하신 것만 받아서 쓰세요.</div>
+  <a href="index.html" class="backlink">← 수사서류 작성 지원 도구로 돌아가기</a>
+</header>
+
+<main>
+
+  <div class="warn-box">
+    ⚠ <strong>실행파일(.exe)을 다운로드하면 브라우저나 Windows에서 "서명되지 않은 프로그램" 경고가 뜰 수 있어요.</strong> 정식 코드 서명 인증서가 없는 개인 제작 프로그램은 원래 이런 경고가 뜨는 게 정상이에요(바이러스라서가 아니에요). "추가 정보 → 실행" 또는 "유지" 버튼으로 넘어가시면 됩니다. 그래도 찜찜하시면 압축을 풀기 전에 원하시는 백신으로 한 번 검사해보셔도 좋아요.
+  </div>
+
+  <div class="card">
+    <h2>🪟 창 관리 시스템</h2>
+    <div class="meta">Windows 전용 · 약 29MB</div>
+    <div>alt-tab을 대체하는 비주얼 썸네일 기반 창 전환기예요. 여러 프로그램을 켜놓고 작업할 때, 창을 미리보기 이미지로 한눈에 보면서 빠르게 전환할 수 있어요.</div>
+    <ul>
+      <li>열려있는 모든 창(최소화된 것 포함)을 실시간으로 스캔해서 카드 형태로 보여줘요</li>
+      <li><strong>Alt + 1~0, Q~P</strong> 키로 원하는 창으로 바로 전환 (최대 20개, 다른 프로그램 쓰는 중에도 동작)</li>
+      <li>카드를 마우스로 드래그해서 순서를 원하는 대로 바꿀 수 있어요</li>
+      <li><strong>F9</strong> 키로 이 프로그램 자체를 앞으로 띄우거나 다시 내릴 수 있어요</li>
+    </ul>
+    <a href="downloads/window_manager.exe" class="btn seal" download>⬇ 다운로드 (window_manager.exe)</a>
+  </div>
+
+  <!-- 새 프로그램이 추가되면 위와 같은 형식으로 카드를 하나씩 더 추가하시면 됩니다 -->
+
+</main>
+
+</body>
+</html>
